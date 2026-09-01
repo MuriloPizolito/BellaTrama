@@ -7,6 +7,8 @@ import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ProdutoService {
@@ -28,6 +30,23 @@ public class ProdutoService {
         ProdutoResponse responseDto = new ProdutoResponse(produtoSalvo.getId(), produtoSalvo.getNome(), produtoSalvo.getPreco(), produtoSalvo.getEstoque(), produtoSalvo.getDescricao(), produtoSalvo.getCor(), produtoSalvo.getMaterial());
 
         return responseDto;
+    }
+
+    public List<ProdutoResponse> listarProdutos() {
+        List<ProdutoEntity> produtos = repository.findAll();
+
+        List<ProdutoResponse> responses = produtos.stream()
+                .map(produto -> new ProdutoResponse(
+                        produto.getId(),
+                        produto.getNome(),
+                        produto.getPreco(),
+                        produto.getEstoque(),
+                        produto.getDescricao(),
+                        produto.getCor(),
+                        produto.getMaterial()
+                )).toList();
+
+        return responses;
     }
 
 
