@@ -2,12 +2,16 @@ package br.com.murilo.bellatrama.dominio.produto.service;
 
 import br.com.murilo.bellatrama.dominio.produto.dto.ProdutoRequest;
 import br.com.murilo.bellatrama.dominio.produto.dto.ProdutoResponse;
+import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
 import br.com.murilo.bellatrama.dominio.produto.model.ProdutoEntity;
 import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.chrono.IsoEra;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +31,14 @@ public class ProdutoService {
 
         ProdutoEntity produtoSalvo = repository.save(produtoEntity);
 
-        ProdutoResponse responseDto = new ProdutoResponse(produtoSalvo.getId(), produtoSalvo.getNome(), produtoSalvo.getPreco(), produtoSalvo.getEstoque(), produtoSalvo.getDescricao(), produtoSalvo.getCor(), produtoSalvo.getMaterial());
+        ProdutoResponse responseDto = new ProdutoResponse(
+                produtoSalvo.getId(),
+                produtoSalvo.getNome(),
+                produtoSalvo.getPreco(),
+                produtoSalvo.getEstoque(),
+                produtoSalvo.getDescricao(),
+                produtoSalvo.getCor(),
+                produtoSalvo.getMaterial());
 
         return responseDto;
     }
@@ -47,6 +58,21 @@ public class ProdutoService {
                 )).toList();
 
         return responses;
+    }
+
+    public ProdutoResponse buscarPorId(UUID id){
+        ProdutoEntity produtoEntity = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+
+        ProdutoResponse responseDto = new ProdutoResponse(
+                produtoEntity.getId(),
+                produtoEntity.getNome(),
+                produtoEntity.getPreco(),
+                produtoEntity.getEstoque(),
+                produtoEntity.getDescricao(),
+                produtoEntity.getCor(),
+                produtoEntity.getMaterial());
+
+        return responseDto;
     }
 
 

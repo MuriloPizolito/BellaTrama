@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/produto")
@@ -32,6 +33,13 @@ public class ProdutoController {
          List<ProdutoResponse> responses = service.listarProdutos();
 
         return ResponseEntity.status(HttpStatus.OK).body(responses);
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity<ProdutoResponse> obterPorId(@PathVariable("id")UUID id){
+        ProdutoResponse response = service.buscarPorId(id);
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 }
