@@ -42,4 +42,10 @@ public class ProdutoController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @PutMapping("{id}")
+    public ResponseEntity<Void> atualizar(@PathVariable("id") UUID id, @RequestBody @Valid ProdutoRequest produtoRequest){
+        service.atualizar(id, produtoRequest);
+        return ResponseEntity.noContent().build();
+    }
+
 }

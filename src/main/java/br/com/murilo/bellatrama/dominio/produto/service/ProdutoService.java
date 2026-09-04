@@ -60,7 +60,7 @@ public class ProdutoService {
         return responses;
     }
 
-    public ProdutoResponse buscarPorId(UUID id){
+    public ProdutoResponse buscarPorId(UUID id) {
         ProdutoEntity produtoEntity = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
 
         ProdutoResponse responseDto = new ProdutoResponse(
@@ -75,5 +75,15 @@ public class ProdutoService {
         return responseDto;
     }
 
+    public void atualizar(UUID id, ProdutoRequest produtoRequest) {
+        ProdutoEntity produtoEntity = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+        produtoEntity.setNome(produtoRequest.nome());
+        produtoEntity.setPreco(produtoRequest.preco());
+        produtoEntity.setEstoque(produtoRequest.estoque());
+        produtoEntity.setDescricao(produtoRequest.descricao());
+        produtoEntity.setCor(produtoRequest.cor());
+        produtoEntity.setMaterial(produtoRequest.material());
 
+        repository.save(produtoEntity);
+    }
 }
