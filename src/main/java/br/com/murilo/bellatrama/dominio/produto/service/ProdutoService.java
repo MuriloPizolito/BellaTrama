@@ -8,7 +8,6 @@ import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.chrono.IsoEra;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +43,7 @@ public class ProdutoService {
     }
 
     public List<ProdutoResponse> listarProdutos() {
-        List<ProdutoEntity> produtos = repository.findAll();
+        List<ProdutoEntity> produtos = repository.findByAtivoTrue();
 
         List<ProdutoResponse> responses = produtos.stream()
                 .map(produto -> new ProdutoResponse(
@@ -61,7 +60,7 @@ public class ProdutoService {
     }
 
     public ProdutoResponse buscarPorId(UUID id) {
-        ProdutoEntity produtoEntity = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+        ProdutoEntity produtoEntity = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
 
         ProdutoResponse responseDto = new ProdutoResponse(
                 produtoEntity.getId(),
@@ -86,4 +85,12 @@ public class ProdutoService {
 
         repository.save(produtoEntity);
     }
+
+    public void desativarProduto(UUID id) {
+        ProdutoEntity produtoEntity = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+        produtoEntity.setAtivo(false);
+
+        repository.save(produtoEntity);
+    }
+
 }

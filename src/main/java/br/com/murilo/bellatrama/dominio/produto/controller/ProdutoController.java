@@ -29,22 +29,28 @@ public class ProdutoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProdutoResponse>> listar(){
-         List<ProdutoResponse> responses = service.listarProdutos();
+    public ResponseEntity<List<ProdutoResponse>> listar() {
+        List<ProdutoResponse> responses = service.listarProdutos();
 
         return ResponseEntity.status(HttpStatus.OK).body(responses);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<ProdutoResponse> obterPorId(@PathVariable("id")UUID id){
+    public ResponseEntity<ProdutoResponse> obterPorId(@PathVariable("id") UUID id) {
         ProdutoResponse response = service.buscarPorId(id);
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Void> atualizar(@PathVariable("id") UUID id, @RequestBody @Valid ProdutoRequest produtoRequest){
+    public ResponseEntity<Void> atualizar(@PathVariable("id") UUID id, @RequestBody @Valid ProdutoRequest produtoRequest) {
         service.atualizar(id, produtoRequest);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<Void> desativarProduto(@PathVariable("id") UUID id) {
+        service.desativarProduto(id);
         return ResponseEntity.noContent().build();
     }
 
