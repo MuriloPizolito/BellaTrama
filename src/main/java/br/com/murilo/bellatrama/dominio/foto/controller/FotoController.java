@@ -33,4 +33,11 @@ public class FotoController {
         return ResponseEntity.ok(fotoResponseList);
     }
 
+    @GetMapping("/produto/{produtoId}/fotos/{fotoId}")
+    public ResponseEntity<FotoResponse> listarPorId(@PathVariable("produtoId") UUID produtoId, @PathVariable("fotoId") UUID fotoId) {
+        FotoResponse fotoResponse = fotoService.buscarPorId(produtoId, fotoId);
+
+        return ResponseEntity.ok(fotoResponse);
+    }
+
 }

@@ -13,4 +13,6 @@ public interface FotoRepository extends JpaRepository<FotoEntity, UUID> {
 
     List<FotoEntity> findByProdutoId(UUID produtoId);
 
+    Optional<FotoEntity> findByIdAndProdutoId (UUID fotoId, UUID produtoId);
+
 }

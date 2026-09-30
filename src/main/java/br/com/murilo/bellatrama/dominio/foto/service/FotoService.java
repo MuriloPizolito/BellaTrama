@@ -2,6 +2,7 @@ package br.com.murilo.bellatrama.dominio.foto.service;
 
 import br.com.murilo.bellatrama.dominio.foto.dto.FotoRequest;
 import br.com.murilo.bellatrama.dominio.foto.dto.FotoResponse;
+import br.com.murilo.bellatrama.dominio.foto.exception.FotoNaoEncontradaException;
 import br.com.murilo.bellatrama.dominio.foto.model.FotoEntity;
 import br.com.murilo.bellatrama.dominio.foto.repository.FotoRepository;
 import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
@@ -54,6 +55,14 @@ public class FotoService {
                         fotoEntity.getUrl(),
                         fotoEntity.getPrincipal()
                 )).toList();
+
+        return fotoResponse;
+    }
+
+    public FotoResponse buscarPorId(UUID produtoId, UUID fotoId) {
+        FotoEntity fotoEntity = fotoRepository.findByIdAndProdutoId(fotoId, produtoId).orElseThrow(() -> new FotoNaoEncontradaException("Foto não encontrada!"));
+
+        FotoResponse fotoResponse = new FotoResponse(fotoEntity.getId(), fotoEntity.getUrl(), fotoEntity.getPrincipal());
 
         return fotoResponse;
     }
