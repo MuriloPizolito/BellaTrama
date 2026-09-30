@@ -10,6 +10,7 @@ import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,6 +39,21 @@ public class FotoService {
         FotoEntity fotoSalva = fotoRepository.save(fotoEntity);
 
         FotoResponse fotoResponse = new FotoResponse(fotoSalva.getId(), fotoSalva.getUrl(), fotoSalva.getPrincipal());
+
+        return fotoResponse;
+    }
+
+    public List<FotoResponse> listarFotos(UUID produtoId) {
+        ProdutoEntity produtoEntity = produtoRepository.findById(produtoId).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+
+        List<FotoEntity> listaFotos = fotoRepository.findByProdutoId(produtoId);
+
+        List<FotoResponse> fotoResponse = listaFotos.stream()
+                .map(fotoEntity -> new FotoResponse(
+                        fotoEntity.getId(),
+                        fotoEntity.getUrl(),
+                        fotoEntity.getPrincipal()
+                )).toList();
 
         return fotoResponse;
     }
