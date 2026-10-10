@@ -3,6 +3,7 @@ package br.com.murilo.bellatrama.dominio.foto.service;
 import br.com.murilo.bellatrama.dominio.foto.dto.FotoRequest;
 import br.com.murilo.bellatrama.dominio.foto.dto.FotoResponse;
 import br.com.murilo.bellatrama.dominio.foto.exception.FotoNaoEncontradaException;
+import br.com.murilo.bellatrama.dominio.foto.exception.FotoPrincipalNaoPodeSerDesmarcadaException;
 import br.com.murilo.bellatrama.dominio.foto.model.FotoEntity;
 import br.com.murilo.bellatrama.dominio.foto.repository.FotoRepository;
 import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
@@ -10,6 +11,7 @@ import br.com.murilo.bellatrama.dominio.produto.model.ProdutoEntity;
 import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +67,32 @@ public class FotoService {
         FotoResponse fotoResponse = new FotoResponse(fotoEntity.getId(), fotoEntity.getUrl(), fotoEntity.getPrincipal());
 
         return fotoResponse;
+    }
+
+    @Transactional
+    public void atualizar(UUID produtoId, UUID fotoId, FotoRequest fotoRequest) {
+        FotoEntity fotoEntity = fotoRepository.findByIdAndProdutoId(fotoId, produtoId).orElseThrow(() -> new FotoNaoEncontradaException("Foto não encontrada!"));
+
+        if (fotoRequest.principal()) { // principal true
+            //  se request principal for true troca a foto principal, aproveitando a lógica do cadastro
+            Optional<FotoEntity> verificaPrincipal = fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId);
+
+            verificaPrincipal.ifPresent(foto -> {
+                if (!foto.getId().equals(fotoEntity.getId())){
+                    foto.setPrincipal(false);
+                    fotoRepository.save(foto);
+                }
+            });
+        }
+
+        if (!fotoRequest.principal() && fotoEntity.getPrincipal() == true) { // principal = false
+            throw new FotoPrincipalNaoPodeSerDesmarcadaException("A foto principal não pode ser desmarcada. Defina outra foto como principal primeiro.");
+        }
+
+        fotoEntity.setUrl(fotoRequest.url());
+        fotoEntity.setPrincipal(fotoRequest.principal());
+
+        fotoRepository.save(fotoEntity);
     }
 
 }

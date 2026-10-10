@@ -1,9 +1,9 @@
 package br.com.murilo.bellatrama.exception;
 
 import br.com.murilo.bellatrama.dominio.foto.exception.FotoNaoEncontradaException;
+import br.com.murilo.bellatrama.dominio.foto.exception.FotoPrincipalNaoPodeSerDesmarcadaException;
 import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,6 +37,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse fotoNaoEncontrada(FotoNaoEncontradaException exception) {
         return new ErrorResponse(HttpStatus.NOT_FOUND.value(), exception.getMessage(), null);
+    }
+
+    @ExceptionHandler(FotoPrincipalNaoPodeSerDesmarcadaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse fotoPrincipalNaoPodeSerDesmarcada(FotoPrincipalNaoPodeSerDesmarcadaException exception) {
+        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), exception.getMessage(), null);
     }
 
 }

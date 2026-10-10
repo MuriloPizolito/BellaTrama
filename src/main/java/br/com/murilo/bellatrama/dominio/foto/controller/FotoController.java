@@ -40,4 +40,11 @@ public class FotoController {
         return ResponseEntity.ok(fotoResponse);
     }
 
+    @PutMapping("/produto/{produtoId}/fotos/{fotoId}")
+    public ResponseEntity<Void> atualizar(@PathVariable("produtoId") UUID produtoId, @PathVariable("fotoId") UUID fotoId, @RequestBody @Valid FotoRequest fotoRequest) {
+        fotoService.atualizar(produtoId, fotoId, fotoRequest);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
