@@ -47,4 +47,12 @@ public class FotoController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/produto/{produtoId}/fotos/{fotoId}")
+    public ResponseEntity<Void> deletar(@PathVariable("produtoId") UUID produtoId, @PathVariable("fotoId") UUID fotoId) {
+        fotoService.deletar(produtoId, fotoId);
+
+        return ResponseEntity.noContent().build();
+    }
+
+
 }

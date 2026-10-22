@@ -24,20 +24,24 @@ public class FotoService {
     private final FotoRepository fotoRepository;
     private final ProdutoRepository produtoRepository;
 
+    @Transactional
     public FotoResponse cadastrar(UUID produtoId, FotoRequest dto) {
         ProdutoEntity produtoEntity = produtoRepository.findById(produtoId).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
 
         FotoEntity fotoEntity = new FotoEntity();
         fotoEntity.setUrl(dto.url());
-        if (dto.principal()) { // se principal for true
-            Optional<FotoEntity> verificaPrincipal = fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId);
+        Optional<FotoEntity> verificaPrincipal = fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId);
 
+        if (dto.principal()) { // se principal for true
             verificaPrincipal.ifPresent(foto -> {
                 foto.setPrincipal(false);
                 fotoRepository.save(foto);
             }); // Um produto pode possuir várias fotos, mas somente uma delas pode ser marcada como principal.
         }
-        fotoEntity.setPrincipal(dto.principal());
+
+        // Primeira foto enviada com false → salva como true.
+
+        fotoEntity.setPrincipal(dto.principal() || verificaPrincipal.isEmpty()); // O resultado será true se pelo menos uma das condições for verdadeira.
         fotoEntity.setProduto(produtoEntity);
         FotoEntity fotoSalva = fotoRepository.save(fotoEntity);
 
@@ -47,7 +51,7 @@ public class FotoService {
     }
 
     public List<FotoResponse> listarFotos(UUID produtoId) {
-        ProdutoEntity produtoEntity = produtoRepository.findById(produtoId).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+        produtoRepository.findById(produtoId).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
 
         List<FotoEntity> listaFotos = fotoRepository.findByProdutoId(produtoId);
 
@@ -78,14 +82,14 @@ public class FotoService {
             Optional<FotoEntity> verificaPrincipal = fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId);
 
             verificaPrincipal.ifPresent(foto -> {
-                if (!foto.getId().equals(fotoEntity.getId())){
+                if (!foto.getId().equals(fotoEntity.getId())) {
                     foto.setPrincipal(false);
                     fotoRepository.save(foto);
                 }
             });
         }
 
-        if (!fotoRequest.principal() && fotoEntity.getPrincipal() == true) { // principal = false
+        if (!fotoRequest.principal() && Boolean.TRUE.equals(fotoEntity.getPrincipal())) { // principal = false
             throw new FotoPrincipalNaoPodeSerDesmarcadaException("A foto principal não pode ser desmarcada. Defina outra foto como principal primeiro.");
         }
 
@@ -93,6 +97,22 @@ public class FotoService {
         fotoEntity.setPrincipal(fotoRequest.principal());
 
         fotoRepository.save(fotoEntity);
+    }
+
+    @Transactional
+    public void deletar(UUID produtoId, UUID fotoId) {
+        FotoEntity fotoEntity = fotoRepository.findByIdAndProdutoId(fotoId, produtoId).orElseThrow(() -> new FotoNaoEncontradaException("Foto não encontrada!"));
+
+        if (Boolean.TRUE.equals(fotoEntity.getPrincipal())) {
+            List<FotoEntity> fotoEntityList = fotoRepository.findByProdutoId(produtoId);
+            Optional<FotoEntity> fotoSubstituta = fotoEntityList.stream().filter(foto -> !foto.getId().equals(fotoEntity.getId())).findFirst();
+
+            fotoSubstituta.ifPresent(fotoSubstituta1 -> {
+                fotoSubstituta1.setPrincipal(true);
+            });
+        }
+
+        fotoRepository.delete(fotoEntity);
     }
 
 }
