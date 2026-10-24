@@ -41,17 +41,15 @@ class FotoServiceTest {
     @DisplayName("Primeira foto do produto sempre vira principal")
     void deveMarcarPrimeiraFotoComoPrincipalMesmoQuandoRequestEnviaFalse() {
         // given
-        ProdutoEntity produto = new ProdutoEntity();
-        UUID produtoId = UUID.randomUUID();
+        ProdutoEntity produto = criarProduto();
         FotoRequest fotoRequest = new FotoRequest(URL_FOTO, false);
-        produto.setId(produtoId);
 
         when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
         when(fotoRepository.findByProdutoIdAndPrincipalTrue(produto.getId())).thenReturn(Optional.empty());
         when(fotoRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        var fotoSalva = fotoService.cadastrar(produtoId, fotoRequest);
+        var fotoSalva = fotoService.cadastrar(produto.getId(), fotoRequest);
 
         // then
         verify(fotoRepository).save(captor.capture());
@@ -67,10 +65,8 @@ class FotoServiceTest {
     @DisplayName("Nova foto não principal não altera a principal existente")
     void naoDeveAlterarPrincipalExistenteQuandoNovaFotoNaoForPrincipal() {
         // given
-        ProdutoEntity produto = new ProdutoEntity();
+        ProdutoEntity produto = criarProduto();
         FotoEntity fotoPrincipalExistente = new FotoEntity();
-        UUID produtoId = UUID.randomUUID();
-        produto.setId(produtoId);
         fotoPrincipalExistente.setPrincipal(true);
 
         FotoRequest fotoRequest = new FotoRequest(URL_FOTO, false);
@@ -80,7 +76,7 @@ class FotoServiceTest {
         when(fotoRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        fotoService.cadastrar(produtoId, fotoRequest);
+        fotoService.cadastrar(produto.getId(), fotoRequest);
 
         // then
         verify(fotoRepository, times(1)).save(captor.capture());
@@ -94,10 +90,8 @@ class FotoServiceTest {
     @DisplayName("Nova foto principal deve alterar a principal existente para não principal")
     void deveAlterarPrincipalExistenteQuandoNovaFotoForPrincipal() {
         // given
-        ProdutoEntity produto = new ProdutoEntity();
+        ProdutoEntity produto = criarProduto();
         FotoEntity fotoExistente = new FotoEntity();
-        UUID produtoId = UUID.randomUUID();
-        produto.setId(produtoId);
         fotoExistente.setPrincipal(true);
 
         FotoRequest fotoRequest = new FotoRequest(URL_FOTO, true);
@@ -107,7 +101,7 @@ class FotoServiceTest {
         when(fotoRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
-        fotoService.cadastrar(produtoId, fotoRequest);
+        fotoService.cadastrar(produto.getId(), fotoRequest);
 
         // then
         verify(fotoRepository, times(2)).save(captor.capture());
@@ -133,5 +127,12 @@ class FotoServiceTest {
         verifyNoInteractions(fotoRepository);
     }
 
+    private ProdutoEntity criarProduto() {
+        ProdutoEntity produto = new ProdutoEntity();
+        UUID produtoId = UUID.randomUUID();
+        produto.setId(produtoId);
+
+        return produto;
+    }
 
 }
