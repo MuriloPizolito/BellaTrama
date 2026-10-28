@@ -1,6 +1,8 @@
 package br.com.murilo.bellatrama.dominio.foto.service;
 
 import br.com.murilo.bellatrama.dominio.foto.dto.FotoRequest;
+import br.com.murilo.bellatrama.dominio.foto.exception.FotoNaoEncontradaException;
+import br.com.murilo.bellatrama.dominio.foto.exception.FotoPrincipalNaoPodeSerDesmarcadaException;
 import br.com.murilo.bellatrama.dominio.foto.model.FotoEntity;
 import br.com.murilo.bellatrama.dominio.foto.repository.FotoRepository;
 import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
@@ -9,7 +11,10 @@ import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -36,6 +41,7 @@ class FotoServiceTest {
     ArgumentCaptor<FotoEntity> captor;
 
     private static final String URL_FOTO = "https://exemplo.com/foto-5.jpg";
+    private static final String NOVA_URL_FOTO = "https://exemplo.com/foto-10.jpg";
 
     @Test
     @DisplayName("Primeira foto do produto sempre vira principal")
@@ -125,6 +131,133 @@ class FotoServiceTest {
 
         // then
         verifyNoInteractions(fotoRepository);
+    }
+
+    @Test
+    @DisplayName("Atualiza a url da foto mantendo foto como não principal")
+    void deveAtualizarUrlMantendoFotoNaoPrincipal() {
+        // given
+        FotoEntity fotoASerAlterada = new FotoEntity();
+        fotoASerAlterada.setPrincipal(false);
+        fotoASerAlterada.setUrl(URL_FOTO);
+        UUID produtoId = UUID.randomUUID();
+        UUID fotoId = UUID.randomUUID();
+        FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, false);
+
+        when(fotoRepository.findByIdAndProdutoId(fotoId, produtoId)).thenReturn(Optional.of(fotoASerAlterada));
+
+        // when
+        fotoService.atualizar(produtoId, fotoId, fotoRequest);
+
+        // then
+        verify(fotoRepository).save(fotoASerAlterada);
+        verifyNoMoreInteractions(fotoRepository);
+
+        assertThat(fotoASerAlterada.getPrincipal()).isFalse();
+        assertThat(fotoASerAlterada.getUrl()).isEqualTo(NOVA_URL_FOTO);
+    }
+
+    @Test
+    @DisplayName("Atualiza a url da foto mantendo foto como principal")
+    void deveAtualizarUrlMantendoFotoComoPrincipal() {
+        // given
+        UUID produtoId = UUID.randomUUID();
+        UUID fotoId = UUID.randomUUID();
+        FotoEntity fotoASerAlterada = new FotoEntity();
+        fotoASerAlterada.setId(fotoId);
+        fotoASerAlterada.setPrincipal(true);
+        fotoASerAlterada.setUrl(URL_FOTO);
+        FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, true);
+
+        when(fotoRepository.findByIdAndProdutoId(fotoId, produtoId)).thenReturn(Optional.of(fotoASerAlterada));
+        when(fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId)).thenReturn(Optional.of(fotoASerAlterada));
+
+        // when
+        fotoService.atualizar(produtoId, fotoId, fotoRequest);
+
+        // then
+        verify(fotoRepository, times(1)).save(fotoASerAlterada);
+        verifyNoMoreInteractions(fotoRepository);
+
+        assertThat(fotoASerAlterada.getPrincipal()).isTrue();
+        assertThat(fotoASerAlterada.getUrl()).isEqualTo(NOVA_URL_FOTO);
+    }
+
+    @Test
+    @DisplayName("Desmarca a foto principal atual quando outra foto é promovida a principal")
+    void deveDesmarcarPrincipalAtualQuandoOutraFotoForPromovida() {
+        // given
+        UUID produtoId = UUID.randomUUID();
+        UUID fotoPromovidaId = UUID.randomUUID();
+        UUID fotoPrincipalAtualId = UUID.randomUUID();
+        FotoEntity fotoASerPromovida = new FotoEntity();
+        fotoASerPromovida.setId(fotoPromovidaId);
+        fotoASerPromovida.setPrincipal(false);
+        fotoASerPromovida.setUrl(URL_FOTO);
+
+        FotoEntity fotoPrincipalAtual = new FotoEntity();
+        fotoPrincipalAtual.setId(fotoPrincipalAtualId);
+        fotoPrincipalAtual.setPrincipal(true);
+
+        FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, true);
+
+        when(fotoRepository.findByIdAndProdutoId(fotoPromovidaId, produtoId)).thenReturn(Optional.of(fotoASerPromovida));
+        when(fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId)).thenReturn(Optional.of(fotoPrincipalAtual));
+
+        // when
+        fotoService.atualizar(produtoId, fotoPromovidaId, fotoRequest);
+
+        // then
+        verify(fotoRepository).save(fotoASerPromovida);
+        verify(fotoRepository).save(fotoPrincipalAtual);
+        verifyNoMoreInteractions(fotoRepository);
+
+        assertThat(fotoASerPromovida.getPrincipal()).isTrue();
+        assertThat(fotoASerPromovida.getUrl()).isEqualTo(NOVA_URL_FOTO);
+        assertThat(fotoPrincipalAtual.getPrincipal()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Lança exceção ao tentar desmarcar foto principal para não principal")
+    void deveLancarExcecaoAoTentarDesmarcarFotoPrincipal() {
+        // given
+        UUID produtoId = UUID.randomUUID();
+        UUID fotoId = UUID.randomUUID();
+        FotoEntity fotoPrincipal = new FotoEntity();
+        fotoPrincipal.setId(fotoId);
+        fotoPrincipal.setPrincipal(true);
+        fotoPrincipal.setUrl(URL_FOTO);
+
+        FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, false);
+
+        when(fotoRepository.findByIdAndProdutoId(fotoId, produtoId)).thenReturn(Optional.of(fotoPrincipal));
+
+        // when
+        assertThatThrownBy(() -> fotoService.atualizar(produtoId, fotoId, fotoRequest)).isInstanceOf(FotoPrincipalNaoPodeSerDesmarcadaException.class);
+
+        // then
+        verify(fotoRepository, never()).save(any());
+
+        assertThat(fotoPrincipal.getPrincipal()).isTrue();
+        assertThat(fotoPrincipal.getUrl()).isEqualTo(URL_FOTO);
+    }
+
+    @Test
+    @DisplayName("Lança exceção ao tentar atualizar foto inexistente")
+    void deveLancarExcecaoAoTentarAtualizarFotoInexistente() {
+        // given
+        UUID produtoId = UUID.randomUUID();
+        UUID fotoIdInexistente = UUID.randomUUID();
+
+        FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, false);
+
+        when(fotoRepository.findByIdAndProdutoId(fotoIdInexistente, produtoId)).thenReturn(Optional.empty());
+
+        // when
+        assertThatThrownBy(() -> fotoService.atualizar(produtoId, fotoIdInexistente, fotoRequest)).isInstanceOf(FotoNaoEncontradaException.class);
+
+        // then
+        verifyNoMoreInteractions(fotoRepository);
     }
 
     private ProdutoEntity criarProduto() {
