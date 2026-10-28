@@ -137,17 +137,15 @@ class FotoServiceTest {
     @DisplayName("Atualiza a url da foto mantendo foto como não principal")
     void deveAtualizarUrlMantendoFotoNaoPrincipal() {
         // given
-        FotoEntity fotoASerAlterada = new FotoEntity();
-        fotoASerAlterada.setPrincipal(false);
-        fotoASerAlterada.setUrl(URL_FOTO);
+        FotoEntity fotoASerAlterada = criarFoto(false);
         UUID produtoId = UUID.randomUUID();
-        UUID fotoId = UUID.randomUUID();
+
         FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, false);
 
-        when(fotoRepository.findByIdAndProdutoId(fotoId, produtoId)).thenReturn(Optional.of(fotoASerAlterada));
+        when(fotoRepository.findByIdAndProdutoId(fotoASerAlterada.getId(), produtoId)).thenReturn(Optional.of(fotoASerAlterada));
 
         // when
-        fotoService.atualizar(produtoId, fotoId, fotoRequest);
+        fotoService.atualizar(produtoId, fotoASerAlterada.getId(), fotoRequest);
 
         // then
         verify(fotoRepository).save(fotoASerAlterada);
@@ -162,18 +160,15 @@ class FotoServiceTest {
     void deveAtualizarUrlMantendoFotoComoPrincipal() {
         // given
         UUID produtoId = UUID.randomUUID();
-        UUID fotoId = UUID.randomUUID();
-        FotoEntity fotoASerAlterada = new FotoEntity();
-        fotoASerAlterada.setId(fotoId);
-        fotoASerAlterada.setPrincipal(true);
-        fotoASerAlterada.setUrl(URL_FOTO);
+        FotoEntity fotoASerAlterada = criarFoto(true);
+
         FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, true);
 
-        when(fotoRepository.findByIdAndProdutoId(fotoId, produtoId)).thenReturn(Optional.of(fotoASerAlterada));
+        when(fotoRepository.findByIdAndProdutoId(fotoASerAlterada.getId(), produtoId)).thenReturn(Optional.of(fotoASerAlterada));
         when(fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId)).thenReturn(Optional.of(fotoASerAlterada));
 
         // when
-        fotoService.atualizar(produtoId, fotoId, fotoRequest);
+        fotoService.atualizar(produtoId, fotoASerAlterada.getId(), fotoRequest);
 
         // then
         verify(fotoRepository, times(1)).save(fotoASerAlterada);
@@ -188,24 +183,17 @@ class FotoServiceTest {
     void deveDesmarcarPrincipalAtualQuandoOutraFotoForPromovida() {
         // given
         UUID produtoId = UUID.randomUUID();
-        UUID fotoPromovidaId = UUID.randomUUID();
-        UUID fotoPrincipalAtualId = UUID.randomUUID();
-        FotoEntity fotoASerPromovida = new FotoEntity();
-        fotoASerPromovida.setId(fotoPromovidaId);
-        fotoASerPromovida.setPrincipal(false);
-        fotoASerPromovida.setUrl(URL_FOTO);
+        FotoEntity fotoASerPromovida = criarFoto(false);
 
-        FotoEntity fotoPrincipalAtual = new FotoEntity();
-        fotoPrincipalAtual.setId(fotoPrincipalAtualId);
-        fotoPrincipalAtual.setPrincipal(true);
+        FotoEntity fotoPrincipalAtual = criarFoto(true);
 
         FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, true);
 
-        when(fotoRepository.findByIdAndProdutoId(fotoPromovidaId, produtoId)).thenReturn(Optional.of(fotoASerPromovida));
+        when(fotoRepository.findByIdAndProdutoId(fotoASerPromovida.getId(), produtoId)).thenReturn(Optional.of(fotoASerPromovida));
         when(fotoRepository.findByProdutoIdAndPrincipalTrue(produtoId)).thenReturn(Optional.of(fotoPrincipalAtual));
 
         // when
-        fotoService.atualizar(produtoId, fotoPromovidaId, fotoRequest);
+        fotoService.atualizar(produtoId, fotoASerPromovida.getId(), fotoRequest);
 
         // then
         verify(fotoRepository).save(fotoASerPromovida);
@@ -222,18 +210,15 @@ class FotoServiceTest {
     void deveLancarExcecaoAoTentarDesmarcarFotoPrincipal() {
         // given
         UUID produtoId = UUID.randomUUID();
-        UUID fotoId = UUID.randomUUID();
-        FotoEntity fotoPrincipal = new FotoEntity();
-        fotoPrincipal.setId(fotoId);
-        fotoPrincipal.setPrincipal(true);
+        FotoEntity fotoPrincipal = criarFoto(true);
         fotoPrincipal.setUrl(URL_FOTO);
 
         FotoRequest fotoRequest = new FotoRequest(NOVA_URL_FOTO, false);
 
-        when(fotoRepository.findByIdAndProdutoId(fotoId, produtoId)).thenReturn(Optional.of(fotoPrincipal));
+        when(fotoRepository.findByIdAndProdutoId(fotoPrincipal.getId(), produtoId)).thenReturn(Optional.of(fotoPrincipal));
 
         // when
-        assertThatThrownBy(() -> fotoService.atualizar(produtoId, fotoId, fotoRequest)).isInstanceOf(FotoPrincipalNaoPodeSerDesmarcadaException.class);
+        assertThatThrownBy(() -> fotoService.atualizar(produtoId, fotoPrincipal.getId(), fotoRequest)).isInstanceOf(FotoPrincipalNaoPodeSerDesmarcadaException.class);
 
         // then
         verify(fotoRepository, never()).save(any());
@@ -258,6 +243,15 @@ class FotoServiceTest {
 
         // then
         verifyNoMoreInteractions(fotoRepository);
+    }
+
+    private FotoEntity criarFoto(boolean valor) {
+        FotoEntity foto = new FotoEntity();
+        foto.setId(UUID.randomUUID());
+        foto.setUrl(URL_FOTO);
+        foto.setPrincipal(valor);
+
+        return foto;
     }
 
     private ProdutoEntity criarProduto() {
