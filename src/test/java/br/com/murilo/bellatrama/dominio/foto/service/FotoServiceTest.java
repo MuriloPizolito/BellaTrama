@@ -279,6 +279,26 @@ class FotoServiceTest {
             verifyNoMoreInteractions(fotoRepository);
         }
 
+        @Test
+        @DisplayName("Deleta foto principal, e promove a mais antiga para principal")
+        void devePromoverFotoMaisAntigaAoDeletarFotoPrincipal() {
+            // given
+            FotoEntity fotoApagada = criarFoto(true);
+            FotoEntity fotoSubstituta = criarFoto(false);
+            UUID produtoId = UUID.randomUUID();
+
+            when(fotoRepository.findByIdAndProdutoId(fotoApagada.getId(), produtoId)).thenReturn(Optional.of(fotoApagada));
+            when(fotoRepository.findFirstByProdutoIdAndIdNotOrderByDataCadastroAscIdAsc(produtoId, fotoApagada.getId())).thenReturn(Optional.of(fotoSubstituta));
+
+            // when
+            fotoService.deletar(produtoId, fotoApagada.getId());
+
+            // then
+            verify(fotoRepository).delete(fotoApagada);
+            verifyNoMoreInteractions(fotoRepository);
+            assertThat(fotoSubstituta.getPrincipal()).isTrue();
+        }
+
     }
 
     private FotoEntity criarFoto(boolean principal) {

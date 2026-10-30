@@ -104,12 +104,9 @@ public class FotoService {
         FotoEntity fotoEntity = fotoRepository.findByIdAndProdutoId(fotoId, produtoId).orElseThrow(() -> new FotoNaoEncontradaException("Foto não encontrada!"));
 
         if (Boolean.TRUE.equals(fotoEntity.getPrincipal())) {
-            List<FotoEntity> fotoEntityList = fotoRepository.findByProdutoId(produtoId);
-            Optional<FotoEntity> fotoSubstituta = fotoEntityList.stream().filter(foto -> !foto.getId().equals(fotoEntity.getId())).findFirst();
+            Optional<FotoEntity> fotoSubstituta = fotoRepository.findFirstByProdutoIdAndIdNotOrderByDataCadastroAscIdAsc(produtoId, fotoId);
 
-            fotoSubstituta.ifPresent(fotoSubstituta1 -> {
-                fotoSubstituta1.setPrincipal(true);
-            });
+            fotoSubstituta.ifPresent(foto -> foto.setPrincipal(true));
         }
 
         fotoRepository.delete(fotoEntity);

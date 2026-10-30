@@ -4,7 +4,9 @@ import br.com.murilo.bellatrama.dominio.produto.model.ProdutoEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -26,5 +28,9 @@ public class FotoEntity {
     @ManyToOne
     @JoinColumn(name = "produto_id", nullable = false)
     private ProdutoEntity produto;
+
+    @Column(name = "data_cadastro", nullable = false)
+    @CreationTimestamp
+    private LocalDateTime dataCadastro;
 
 }
