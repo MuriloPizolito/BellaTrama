@@ -258,6 +258,29 @@ class FotoServiceTest {
 
     }
 
+    @Nested
+    @DisplayName("Deletar")
+    class Deletar {
+
+        @Test
+        @DisplayName("Deleta foto não principal sem promover nenhuma outra")
+        void naoDevePromoverNenhumaFotoAoDeletarFotoNaoPrincipal() {
+            // given
+            FotoEntity fotoDeletada = criarFoto(false);
+            UUID produtoId = UUID.randomUUID();
+
+            when(fotoRepository.findByIdAndProdutoId(fotoDeletada.getId(), produtoId)).thenReturn(Optional.of(fotoDeletada));
+
+            // when
+            fotoService.deletar(produtoId, fotoDeletada.getId());
+
+            // then
+            verify(fotoRepository).delete(fotoDeletada);
+            verifyNoMoreInteractions(fotoRepository);
+        }
+
+    }
+
     private FotoEntity criarFoto(boolean principal) {
         FotoEntity foto = new FotoEntity();
         foto.setId(UUID.randomUUID());
