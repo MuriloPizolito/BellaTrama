@@ -299,6 +299,41 @@ class FotoServiceTest {
             assertThat(fotoSubstituta.getPrincipal()).isTrue();
         }
 
+        @Test
+        @DisplayName("Deleta única foto principal")
+        void deveDeletarFotoSemPromoverNinguemQuandoNaoHaOutraFoto() {
+            // given
+            FotoEntity fotoPrincipal = criarFoto(true);
+            UUID produtoId = UUID.randomUUID();
+
+            when(fotoRepository.findByIdAndProdutoId(fotoPrincipal.getId(), produtoId)).thenReturn(Optional.of(fotoPrincipal));
+            when(fotoRepository.findFirstByProdutoIdAndIdNotOrderByDataCadastroAscIdAsc(produtoId, fotoPrincipal.getId())).thenReturn(Optional.empty());
+
+            // when
+            fotoService.deletar(produtoId, fotoPrincipal.getId());
+
+            // then
+            verify(fotoRepository).delete(fotoPrincipal);
+            verifyNoMoreInteractions(fotoRepository);
+        }
+
+        @Test
+        @DisplayName("Lança exceção ao tentar deletar uma foto inexistente ou pertencente a outro produto")
+        void deveLancarExcecaoAoTentarDeletarFotoInexistente() {
+            // given
+            UUID fotoInexistente = UUID.randomUUID();
+            UUID produtoId = UUID.randomUUID();
+
+            when(fotoRepository.findByIdAndProdutoId(fotoInexistente, produtoId)).thenReturn(Optional.empty());
+
+            // when
+            assertThatThrownBy(() -> fotoService.deletar(produtoId, fotoInexistente)).isInstanceOf(FotoNaoEncontradaException.class);
+
+            // then
+            verify(fotoRepository, never()).delete(any());
+            verifyNoMoreInteractions(fotoRepository);
+        }
+
     }
 
     private FotoEntity criarFoto(boolean principal) {
