@@ -1,6 +1,7 @@
 package br.com.murilo.bellatrama.dominio.foto.service;
 
 import br.com.murilo.bellatrama.dominio.foto.dto.FotoRequest;
+import br.com.murilo.bellatrama.dominio.foto.dto.FotoResponse;
 import br.com.murilo.bellatrama.dominio.foto.exception.FotoNaoEncontradaException;
 import br.com.murilo.bellatrama.dominio.foto.exception.FotoPrincipalNaoPodeSerDesmarcadaException;
 import br.com.murilo.bellatrama.dominio.foto.model.FotoEntity;
@@ -22,8 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -332,6 +332,109 @@ class FotoServiceTest {
             // then
             verify(fotoRepository, never()).delete(any());
             verifyNoMoreInteractions(fotoRepository);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("Buscar por id")
+    class BuscarPorId {
+
+        @Test
+        @DisplayName("Busca foto pelo id e retorna foto encontrada")
+        void deveBuscarERetornarFotoEncontradaPeloId() {
+            // given
+            FotoEntity foto = criarFoto(true);
+            UUID produtoId = UUID.randomUUID();
+
+            when(fotoRepository.findByIdAndProdutoId(foto.getId(), produtoId)).thenReturn(Optional.of(foto));
+
+            // when
+            FotoResponse fotoResponse = fotoService.buscarPorId(produtoId, foto.getId());
+
+            // then
+            assertThat(fotoResponse.id()).isEqualTo(foto.getId());
+            assertThat(fotoResponse.url()).isEqualTo(foto.getUrl());
+            assertThat(fotoResponse.principal()).isEqualTo(foto.getPrincipal());
+        }
+
+        @Test
+        @DisplayName("Lança exceção ao tentar buscar uma foto inexistente ou pertencente a outro produto")
+        void deveLancarExcecaoAoTentarBuscarFotoInexistente() {
+            // given
+            UUID fotoInexistente = UUID.randomUUID();
+            UUID produtoId = UUID.randomUUID();
+
+            when(fotoRepository.findByIdAndProdutoId(fotoInexistente, produtoId)).thenReturn(Optional.empty());
+
+            // when
+            assertThatThrownBy(() -> fotoService.buscarPorId(produtoId, fotoInexistente)).isInstanceOf(FotoNaoEncontradaException.class);
+
+            // then
+            verify(fotoRepository, times(1)).findByIdAndProdutoId(fotoInexistente, produtoId);
+            verifyNoMoreInteractions(fotoRepository);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("Listar fotos")
+    class ListarFotos {
+
+        @Test
+        @DisplayName("Lista as fotos cadastradas do produto")
+        void deveListarAsFotosDoProduto() {
+            // given
+            ProdutoEntity produto = criarProduto();
+            FotoEntity foto1 = criarFoto(true);
+            FotoEntity foto2 = criarFoto(false);
+            foto2.setUrl(NOVA_URL_FOTO);
+            FotoEntity foto3 = criarFoto(false);
+            List<FotoEntity> listaFotos = List.of(foto1, foto2, foto3);
+
+            when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
+            when(fotoRepository.findByProdutoId(produto.getId())).thenReturn(listaFotos);
+
+            // when
+            List<FotoResponse> fotoResponse = fotoService.listarFotos(produto.getId());
+
+            // then
+            assertThat(fotoResponse).extracting(FotoResponse::id, FotoResponse::principal, FotoResponse::url).containsExactly(
+                    tuple(foto1.getId(), true, URL_FOTO),
+                    tuple(foto2.getId(), false, NOVA_URL_FOTO),
+                    tuple(foto3.getId(), false, URL_FOTO));
+        }
+
+        @Test
+        @DisplayName("Retorna uma lista vazia, produto sem fotos cadastradas")
+        void deveRetornarUmaListaVazia() {
+            // given
+            ProdutoEntity produto = criarProduto();
+            List<FotoEntity> listaFotos = List.of();
+
+            when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
+            when(fotoRepository.findByProdutoId(produto.getId())).thenReturn(listaFotos);
+
+            // when
+            List<FotoResponse> fotoResponse = fotoService.listarFotos(produto.getId());
+
+            // then
+            assertThat(fotoResponse).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Lança uma exceção ao listar com produto inexistente")
+        void deveLancarExcecaoAoTentarListarComProdutoInexistente() {
+            // given
+            UUID produtoId = UUID.randomUUID();
+
+            when(produtoRepository.findById(produtoId)).thenReturn(Optional.empty());
+
+            // when
+            assertThatThrownBy(() -> fotoService.listarFotos(produtoId)).isInstanceOf(ProdutoNaoEncontradoException.class);
+
+            // then
+            verifyNoInteractions(fotoRepository);
         }
 
     }
