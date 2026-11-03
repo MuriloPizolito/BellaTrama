@@ -19,8 +19,6 @@ public class ProdutoController {
 
     private final ProdutoService service;
 
-    // mandar o codigo daqui, mas escrever sobre os commits no github, só dei o commit initial. Como devo continuar subindo os commits, com esses códigos já feitos
-
     @PostMapping
     public ResponseEntity<ProdutoResponse> cadastrar(@RequestBody @Valid ProdutoRequest produtoRequest) {
         ProdutoResponse produtoSalvo = service.cadastrar(produtoRequest);

@@ -19,7 +19,7 @@ public class FotoEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "url")
+    @Column(name = "url", length = 2048)
     private String url;
 
     @Column(name = "principal")

@@ -17,7 +17,7 @@ public class ProdutoEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "nome")
+    @Column(name = "nome", length = 100)
     private String nome;
 
     @Column(name = "preco")
@@ -26,17 +26,16 @@ public class ProdutoEntity {
     @Column(name = "estoque")
     private Integer estoque;
 
-    @Column(name = "descricao")
+    @Column(name = "descricao", length = 500)
     private String descricao;
 
-    @Column(name = "cor")
+    @Column(name = "cor", length = 50)
     private String cor;
 
-    @Column(name = "material")
+    @Column(name = "material", length = 100)
     private String material;
 
     @Column(name = "ativo")
     private Boolean ativo;
-
 
 }
