@@ -86,6 +86,11 @@ public class GlobalExceptionHandler {
                 case 415 -> "Tipo de conteúdo não suportado.";
                 default -> "Erro ao processar a requisição.";
             };
+
+            if (statusCode.is5xxServerError()) {
+                log.error("Erro interno ao processar a requisição.", exception);
+            }
+
             HttpHeaders headers = errorResponse.getHeaders();
             return ResponseEntity.status(status).headers(headers).body(new ErrorResponse(status, mensagem, null));
         }
