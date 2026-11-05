@@ -175,6 +175,14 @@ Para executar os testes:
 - Desenvolver a integração com uma interface frontend.
 - Avaliar a implantação da aplicação em ambiente de produção.
 
+## Roadmap
+
+O desenvolvimento do projeto está organizado em etapas, desde a
+implementação da API até a publicação da aplicação.
+
+Confira o planejamento e o progresso das funcionalidades em
+[ROADMAP.md](./ROADMAP.md).
+
 ---
 
 **Status:** Em desenvolvimento.
