@@ -10,13 +10,16 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = GlobalExceptionHandlerTest.TestController.class)
 @Import(GlobalExceptionHandlerTest.TestController.class)
@@ -30,6 +33,11 @@ class GlobalExceptionHandlerTest {
         @PostMapping("/teste/validacao")
         public String testarValidacao(@RequestBody @Valid TestRequest testRequest) {
             return "Dados válidos";
+        }
+
+        @GetMapping("/teste/erro-interno")
+        public String testeErroInterno() {
+            throw new RuntimeException("ERROR: relation \tb_produto\" does not exist");
         }
     }
 
@@ -58,5 +66,17 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.mensagem").value("Existem campos inválidos na requisição."))
                 .andExpect(jsonPath("$.erros.descricao").value("A descrição deve ter no máximo 500 caracteres. / A descrição é obrigatória."));
     }
+
+    @Test
+    @DisplayName("Não deve expor detalhes internos quando ocorre uma exceção genérica")
+    void deveRetornarErroInternoSemExporDetalhesDaExcecao() throws Exception {
+
+        mockMvc.perform(get("/teste/erro-interno"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.mensagem").value("Ocorreu um erro interno ao processar sua solicitação."))
+                .andExpect(content().string(not(containsString("ERROR: relation \tb_produto\" does not exist"))));
+    }
+
 
 }
