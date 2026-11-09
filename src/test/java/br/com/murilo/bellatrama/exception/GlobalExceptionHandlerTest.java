@@ -8,12 +8,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -28,6 +31,8 @@ class GlobalExceptionHandlerTest {
     @Autowired
     MockMvc mockMvc;
 
+    private static final String MOTIVO_SENSIVEL = "Informação sensível que não deve aparecer";
+
     @RestController
     static class TestController {
         @PostMapping("/teste/validacao")
@@ -35,9 +40,14 @@ class GlobalExceptionHandlerTest {
             return "Dados válidos";
         }
 
+        @PostMapping("/teste/erro-unavailable")
+        public String testeServiceUnavailable() {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, MOTIVO_SENSIVEL);
+        }
+
         @GetMapping("/teste/erro-interno")
         public String testeErroInterno() {
-            throw new RuntimeException("ERROR: relation \tb_produto\" does not exist");
+            throw new RuntimeException(MOTIVO_SENSIVEL);
         }
     }
 
@@ -75,8 +85,20 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.mensagem").value("Ocorreu um erro interno ao processar sua solicitação."))
-                .andExpect(content().string(not(containsString("ERROR: relation \tb_produto\" does not exist"))));
+                .andExpect(content().string(not(containsString(MOTIVO_SENSIVEL))));
     }
+
+    @Test
+    @DisplayName("Deve manter o status 5xx da exceção do Spring sem expor o motivo")
+    void deveManterStatus5xxDaExcecaoDoSpringSemExporMotivo() throws Exception {
+
+        mockMvc.perform(post("/teste/erro-unavailable"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value(503))
+                .andExpect(jsonPath("$.mensagem").value("Erro ao processar a requisição."))
+                .andExpect(content().string(not(containsString(MOTIVO_SENSIVEL))));
+    }
+
 
 
 }
