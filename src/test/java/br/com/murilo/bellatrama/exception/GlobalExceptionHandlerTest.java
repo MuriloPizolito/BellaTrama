@@ -1,5 +1,6 @@
 package br.com.murilo.bellatrama.exception;
 
+import br.com.murilo.bellatrama.dominio.foto.exception.FotoNaoEncontradaException;
 import br.com.murilo.bellatrama.dominio.foto.exception.FotoPrincipalNaoPodeSerDesmarcadaException;
 import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
 import jakarta.validation.Valid;
@@ -72,6 +73,11 @@ class GlobalExceptionHandlerTest {
             throw new ProdutoNaoEncontradoException("Mensagem de teste");
         }
 
+        @GetMapping("/teste/erro-foto-nao-encontrada")
+        public String testeFotoNaoEncontrada() {
+            throw new FotoNaoEncontradaException("Mensagem de teste");
+        }
+
         @PutMapping("/teste/erro-desmarcar-foto-principal")
         public String testeDesmarcarFotoPrincipal() {
             throw new FotoPrincipalNaoPodeSerDesmarcadaException("Mensagem de teste");
@@ -122,13 +128,14 @@ class GlobalExceptionHandlerTest {
 
     @Test
     @DisplayName("Deve manter o status 5xx da exceção do Spring sem expor o motivo")
-    void deveManterStatus5xxDaExcecaoDoSpringSemExporMotivo() throws Exception {
+    void deveManterStatus5xxDaExcecaoDoSpringSemExporMotivo(CapturedOutput output) throws Exception {
 
         mockMvc.perform(post("/teste/erro-unavailable"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value(503))
                 .andExpect(jsonPath("$.mensagem").value("Erro ao processar a requisição."))
                 .andExpect(content().string(not(containsString(MOTIVO_SENSIVEL))));
+        Assertions.assertThat(output).contains("Erro interno ao processar a requisição.");
     }
 
     @Test
@@ -215,6 +222,16 @@ class GlobalExceptionHandlerTest {
                         "404 - Produto não encontrado",
                         HttpMethod.GET,
                         "/teste/erro-produto-nao-encontrado",
+                        404,
+                        "Mensagem de teste",
+                        null,
+                        null
+                ),
+
+                Arguments.of(
+                        "404 - Foto não encontrada",
+                        HttpMethod.GET,
+                        "/teste/erro-foto-nao-encontrada",
                         404,
                         "Mensagem de teste",
                         null,
