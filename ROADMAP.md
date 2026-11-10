@@ -42,7 +42,7 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 
 **Testes automatizados**
 - ✅ `FotoServiceTest` (JUnit 5 + Mockito + AssertJ, organizado com `@Nested`): 18 testes
-- ⬜ `GlobalExceptionHandlerTest` (`@WebMvcTest` com controller de teste)
+- ✅ `GlobalExceptionHandlerTest` (`@WebMvcTest` com controller de teste)
 - ⬜ `ProdutoServiceTest` (regras: `ativo = true` no cadastro, inativo não é encontrado, desativação)
 - ⬜ `ProdutoControllerTest` e `FotoControllerTest` (status HTTP, rotas, chamada ao service)
 - ⬜ Testes de integração com PostgreSQL real (Testcontainers): ordenação da substituta, busca de foto que não cruza produtos, limites de coluna
