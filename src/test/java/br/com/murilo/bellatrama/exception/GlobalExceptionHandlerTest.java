@@ -9,22 +9,30 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = GlobalExceptionHandlerTest.TestController.class)
@@ -50,7 +58,7 @@ class GlobalExceptionHandlerTest {
         }
 
         @PostMapping("/teste/erro-metodo-nao-permitido")
-        public String testeMetodoHtppNaoPermitido() {
+        public String testeMetodoNaoPermitido() {
             return "Método permitido";
         }
 
@@ -124,28 +132,6 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("Método HTTP não suportado retorna 405")
-    void deveRetornarMethodNotAllowedQuandoMetodoHttpNaoForSuportado() throws Exception {
-
-        mockMvc.perform(get("/teste/erro-metodo-nao-permitido"))
-                .andExpect(status().isMethodNotAllowed())
-                .andExpect(jsonPath("$.status").value(405))
-                .andExpect(jsonPath("$.mensagem").value("O método HTTP utilizado não é permitido para este recurso."));
-    }
-
-    @Test
-    @DisplayName("Content-Type não suportado retorna 415")
-    void deveRetornarUnsupportedMediaTypeQuandoContentTypeForInvalido() throws Exception {
-
-        mockMvc.perform(post("/teste/validacao")
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content("Texto Simples"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(jsonPath("$.status").value(415))
-                .andExpect(jsonPath("$.mensagem").value("Tipo de conteúdo não suportado."));
-    }
-
-    @Test
     @DisplayName("JSON malformado retorna bad request")
     void deveRetornarBadRequestQuandoJsonForMalformado(CapturedOutput output) throws Exception {
         String json = """
@@ -163,44 +149,98 @@ class GlobalExceptionHandlerTest {
         Assertions.assertThat(output).contains("Corpo inválido");
     }
 
-    @Test
-    @DisplayName("UUID inválido no PathVariable retorna bad request")
-    void deveRetornarBadRequestQuandoUuidDoPathVariableForInvalido() throws Exception {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("fornecerCenarios")
+    void deveMapearExcecaoParaRespostaPadronizada(
+            String descricao,
+            HttpMethod httpMethod,
+            String url,
+            int statusEsperado,
+            String mensagemEsperada,
+            String contentType,
+            String body
+    ) throws Exception {
 
-        mockMvc.perform(post("/teste/erro-uuid-invalido/{id}", "1a"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Um ou mais parâmetros da requisição possuem um tipo ou formato inválido."));
+        MockHttpServletRequestBuilder request =
+                MockMvcRequestBuilders.request(httpMethod, url);
+
+        if (contentType != null) {
+            request.contentType(contentType);
+        }
+
+        if (body != null) {
+            request.content(body);
+        }
+
+        mockMvc.perform(request)
+                .andExpect(status().is(statusEsperado))
+                .andExpect(jsonPath("$.status").value(statusEsperado))
+                .andExpect(jsonPath("$.mensagem").value(mensagemEsperada));
     }
 
-    @Test
-    @DisplayName("Produto não encontrado retorna 404")
-    void deveRetornarNotFoundQuandoProdutoNaoForEncontrado() throws Exception {
+    static Stream<Arguments> fornecerCenarios() {
+        return Stream.of(
 
-        mockMvc.perform(get("/teste/erro-produto-nao-encontrado"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Mensagem de teste"));
-    }
+                Arguments.of(
+                        "405 - Método HTTP não permitido",
+                        HttpMethod.GET,
+                        "/teste/erro-metodo-nao-permitido",
+                        405,
+                        "O método HTTP utilizado não é permitido para este recurso.",
+                        null,
+                        null
+                ),
 
-    @Test
-    @DisplayName("Tentativa de desmarcar foto principal retorna bad request")
-    void deveRetornarBadRequestQuandoFotoPrincipalNaoPuderSerDesmarcada() throws Exception {
+                Arguments.of(
+                        "415 - Content-Type não suportado",
+                        HttpMethod.POST,
+                        "/teste/validacao",
+                        415,
+                        "Tipo de conteúdo não suportado.",
+                        MediaType.TEXT_PLAIN_VALUE,
+                        "Texto Simples"
+                ),
 
-        mockMvc.perform(put("/teste/erro-desmarcar-foto-principal"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.mensagem").value("Mensagem de teste"));
-    }
+                Arguments.of(
+                        "400 - UUID inválido",
+                        HttpMethod.POST,
+                        "/teste/erro-uuid-invalido/1a",
+                        400,
+                        "Um ou mais parâmetros da requisição possuem um tipo ou formato inválido.",
+                        null,
+                        null
+                ),
 
-    @Test
-    @DisplayName("Rota inexistente retorna not found")
-    void deveRetornarNotFoundQuandoRotaNaoExistir() throws Exception {
+                Arguments.of(
+                        "404 - Produto não encontrado",
+                        HttpMethod.GET,
+                        "/teste/erro-produto-nao-encontrado",
+                        404,
+                        "Mensagem de teste",
+                        null,
+                        null
+                ),
 
-        mockMvc.perform(post("/teste/rota-que-nao-existe"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.mensagem").value("Recurso não encontrado."));
+                Arguments.of(
+                        "400 - Foto principal não pode ser desmarcada",
+                        HttpMethod.PUT,
+                        "/teste/erro-desmarcar-foto-principal",
+                        400,
+                        "Mensagem de teste",
+                        null,
+                        null
+                ),
+
+                Arguments.of(
+                        "404 - Rota inexistente",
+                        HttpMethod.POST,
+                        "/teste/rota-que-nao-existe",
+                        404,
+                        "Recurso não encontrado.",
+                        null,
+                        null
+                )
+        );
     }
 
 }
