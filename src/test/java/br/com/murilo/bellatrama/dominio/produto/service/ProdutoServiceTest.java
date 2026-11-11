@@ -2,6 +2,7 @@ package br.com.murilo.bellatrama.dominio.produto.service;
 
 import br.com.murilo.bellatrama.dominio.produto.dto.ProdutoRequest;
 import br.com.murilo.bellatrama.dominio.produto.dto.ProdutoResponse;
+import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
 import br.com.murilo.bellatrama.dominio.produto.model.ProdutoEntity;
 import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -16,10 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -118,6 +119,41 @@ class ProdutoServiceTest {
 
     }
 
+    @Nested
+    @DisplayName("Buscar por id")
+    class BuscarPorId {
+
+        @Test
+        @DisplayName("Busca pelo id e retorna produto ativo encontrado")
+        void deveBuscarERetornarProdutoAtivoEncontradoPeloId() {
+            ProdutoEntity produto = criarProduto();
+
+            when(produtoRepository.findByIdAndAtivoTrue(produto.getId())).thenReturn(Optional.of(produto));
+
+            ProdutoResponse produtoResponse = produtoService.buscarPorId(produto.getId());
+
+            verify(produtoRepository).findByIdAndAtivoTrue(produto.getId());
+            verifyNoMoreInteractions(produtoRepository);
+
+            assertThat(produtoResponse).extracting(ProdutoResponse::id, ProdutoResponse::nome, ProdutoResponse::preco, ProdutoResponse::estoque, ProdutoResponse::descricao, ProdutoResponse::cor, ProdutoResponse::material)
+                    .containsExactly(produto.getId(), produto.getNome(), produto.getPreco(), produto.getEstoque(), produto.getDescricao(), produto.getCor(), produto.getMaterial());
+        }
+
+        @Test
+        @DisplayName("Busca pelo id e não encontra produto inativo ou inexistente")
+        void deveBuscarPeloIdENaoEncontrarProdutoInativoOuInexistente() {
+            UUID produtoInexistente = UUID.randomUUID();
+
+            when(produtoRepository.findByIdAndAtivoTrue(produtoInexistente)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> produtoService.buscarPorId(produtoInexistente)).isInstanceOf(ProdutoNaoEncontradoException.class);
+
+            verify(produtoRepository, times(1)).findByIdAndAtivoTrue(produtoInexistente);
+            verifyNoMoreInteractions(produtoRepository);
+        }
+
+    }
+
     private ProdutoRequest criarRequest() {
         return new ProdutoRequest(
                 "Bolsa",
@@ -142,5 +178,15 @@ class ProdutoServiceTest {
         return produto;
     }
 
+    private ProdutoEntity criarProduto() {
+        return criarProduto(
+                "Bolsa",
+                BigDecimal.valueOf(100),
+                10,
+                "Bolsa artesanal",
+                "Laranja",
+                "Algodão"
+        );
+    }
 
 }
