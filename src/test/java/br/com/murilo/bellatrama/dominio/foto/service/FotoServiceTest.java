@@ -54,10 +54,15 @@ class FotoServiceTest {
             // given
             ProdutoEntity produto = criarProduto();
             FotoRequest fotoRequest = new FotoRequest(URL_FOTO, false);
+            UUID idEsperado = UUID.randomUUID();
 
             when(produtoRepository.findById(produto.getId())).thenReturn(Optional.of(produto));
             when(fotoRepository.findByProdutoIdAndPrincipalTrue(produto.getId())).thenReturn(Optional.empty());
-            when(fotoRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+            when(fotoRepository.save(any())).thenAnswer(invocation -> {
+                FotoEntity entity = invocation.getArgument(0);
+                entity.setId(idEsperado);
+                return entity;
+            });
 
             // when
             var fotoSalva = fotoService.cadastrar(produto.getId(), fotoRequest);
@@ -68,6 +73,8 @@ class FotoServiceTest {
 
             assertThat(fotoCapturada.getPrincipal()).isTrue();
             assertThat(fotoSalva.principal()).isTrue();
+            assertThat(fotoSalva.id()).isEqualTo(idEsperado);
+            assertThat(fotoSalva.url()).isEqualTo(URL_FOTO);
             assertThat(fotoCapturada.getProduto()).isSameAs(produto);
             assertThat(fotoCapturada.getUrl()).isEqualTo(URL_FOTO);
         }
