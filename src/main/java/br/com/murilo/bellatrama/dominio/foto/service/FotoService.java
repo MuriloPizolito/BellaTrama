@@ -6,6 +6,7 @@ import br.com.murilo.bellatrama.dominio.foto.exception.FotoNaoEncontradaExceptio
 import br.com.murilo.bellatrama.dominio.foto.exception.FotoPrincipalNaoPodeSerDesmarcadaException;
 import br.com.murilo.bellatrama.dominio.foto.model.FotoEntity;
 import br.com.murilo.bellatrama.dominio.foto.repository.FotoRepository;
+import br.com.murilo.bellatrama.dominio.produto.dto.ProdutoResponse;
 import br.com.murilo.bellatrama.dominio.produto.exception.ProdutoNaoEncontradoException;
 import br.com.murilo.bellatrama.dominio.produto.model.ProdutoEntity;
 import br.com.murilo.bellatrama.dominio.produto.repository.ProdutoRepository;
@@ -45,9 +46,7 @@ public class FotoService {
         fotoEntity.setProduto(produtoEntity);
         FotoEntity fotoSalva = fotoRepository.save(fotoEntity);
 
-        FotoResponse fotoResponse = new FotoResponse(fotoSalva.getId(), fotoSalva.getUrl(), fotoSalva.getPrincipal());
-
-        return fotoResponse;
+        return converterParaResponse(fotoSalva);
     }
 
     public List<FotoResponse> listarFotos(UUID produtoId) {
@@ -55,12 +54,7 @@ public class FotoService {
 
         List<FotoEntity> listaFotos = fotoRepository.findByProdutoId(produtoId);
 
-        List<FotoResponse> fotoResponse = listaFotos.stream()
-                .map(fotoEntity -> new FotoResponse(
-                        fotoEntity.getId(),
-                        fotoEntity.getUrl(),
-                        fotoEntity.getPrincipal()
-                )).toList();
+        List<FotoResponse> fotoResponse = listaFotos.stream().map(this::converterParaResponse).toList();
 
         return fotoResponse;
     }
@@ -68,9 +62,7 @@ public class FotoService {
     public FotoResponse buscarPorId(UUID produtoId, UUID fotoId) {
         FotoEntity fotoEntity = fotoRepository.findByIdAndProdutoId(fotoId, produtoId).orElseThrow(() -> new FotoNaoEncontradaException("Foto não encontrada!"));
 
-        FotoResponse fotoResponse = new FotoResponse(fotoEntity.getId(), fotoEntity.getUrl(), fotoEntity.getPrincipal());
-
-        return fotoResponse;
+        return converterParaResponse(fotoEntity);
     }
 
     @Transactional
@@ -110,6 +102,14 @@ public class FotoService {
         }
 
         fotoRepository.delete(fotoEntity);
+    }
+
+    private FotoResponse converterParaResponse(FotoEntity fotoEntity) {
+        return new FotoResponse(
+                fotoEntity.getId(),
+                fotoEntity.getUrl(),
+                fotoEntity.getPrincipal()
+        );
     }
 
 }
