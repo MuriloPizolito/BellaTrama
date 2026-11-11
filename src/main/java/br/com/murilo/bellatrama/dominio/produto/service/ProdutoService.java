@@ -29,14 +29,14 @@ public class ProdutoService {
 
         ProdutoEntity produtoSalvo = repository.save(produtoEntity);
 
-        return mapearEntityToResponse(produtoSalvo);
+        return converterParaResponse(produtoSalvo);
     }
 
     public List<ProdutoResponse> listarProdutos() {
         List<ProdutoEntity> produtos = repository.findByAtivoTrue();
 
         List<ProdutoResponse> responses = produtos.stream()
-                .map(this::mapearEntityToResponse).toList();
+                .map(this::converterParaResponse).toList();
 
         return responses;
     }
@@ -44,7 +44,7 @@ public class ProdutoService {
     public ProdutoResponse buscarPorId(UUID id) {
         ProdutoEntity produtoEntity = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
 
-        return mapearEntityToResponse(produtoEntity);
+        return converterParaResponse(produtoEntity);
     }
 
     public void atualizar(UUID id, ProdutoRequest produtoRequest) {
@@ -66,7 +66,7 @@ public class ProdutoService {
         repository.save(produtoEntity);
     }
 
-    private ProdutoResponse mapearEntityToResponse(ProdutoEntity produtoEntity) {
+    private ProdutoResponse converterParaResponse(ProdutoEntity produtoEntity) {
         return new ProdutoResponse(
                 produtoEntity.getId(),
                 produtoEntity.getNome(),
