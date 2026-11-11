@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -30,31 +29,14 @@ public class ProdutoService {
 
         ProdutoEntity produtoSalvo = repository.save(produtoEntity);
 
-        ProdutoResponse responseDto = new ProdutoResponse(
-                produtoSalvo.getId(),
-                produtoSalvo.getNome(),
-                produtoSalvo.getPreco(),
-                produtoSalvo.getEstoque(),
-                produtoSalvo.getDescricao(),
-                produtoSalvo.getCor(),
-                produtoSalvo.getMaterial());
-
-        return responseDto;
+        return mapearEntityToResponse(produtoSalvo);
     }
 
     public List<ProdutoResponse> listarProdutos() {
         List<ProdutoEntity> produtos = repository.findByAtivoTrue();
 
         List<ProdutoResponse> responses = produtos.stream()
-                .map(produto -> new ProdutoResponse(
-                        produto.getId(),
-                        produto.getNome(),
-                        produto.getPreco(),
-                        produto.getEstoque(),
-                        produto.getDescricao(),
-                        produto.getCor(),
-                        produto.getMaterial()
-                )).toList();
+                .map(this::mapearEntityToResponse).toList();
 
         return responses;
     }
@@ -62,16 +44,7 @@ public class ProdutoService {
     public ProdutoResponse buscarPorId(UUID id) {
         ProdutoEntity produtoEntity = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
 
-        ProdutoResponse responseDto = new ProdutoResponse(
-                produtoEntity.getId(),
-                produtoEntity.getNome(),
-                produtoEntity.getPreco(),
-                produtoEntity.getEstoque(),
-                produtoEntity.getDescricao(),
-                produtoEntity.getCor(),
-                produtoEntity.getMaterial());
-
-        return responseDto;
+        return mapearEntityToResponse(produtoEntity);
     }
 
     public void atualizar(UUID id, ProdutoRequest produtoRequest) {
@@ -91,6 +64,18 @@ public class ProdutoService {
         produtoEntity.setAtivo(false);
 
         repository.save(produtoEntity);
+    }
+
+    private ProdutoResponse mapearEntityToResponse(ProdutoEntity produtoEntity) {
+        return new ProdutoResponse(
+                produtoEntity.getId(),
+                produtoEntity.getNome(),
+                produtoEntity.getPreco(),
+                produtoEntity.getEstoque(),
+                produtoEntity.getDescricao(),
+                produtoEntity.getCor(),
+                produtoEntity.getMaterial()
+        );
     }
 
 }
