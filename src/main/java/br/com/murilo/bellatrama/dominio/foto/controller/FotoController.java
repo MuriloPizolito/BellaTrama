@@ -13,41 +13,41 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-//@RequestMapping
+@RequestMapping("/produtos/{produtoId}/fotos")
 @RequiredArgsConstructor
 public class FotoController {
 
     private final FotoService fotoService;
 
-    @PostMapping("/produto/{produtoId}/fotos")
+    @PostMapping
     public ResponseEntity<FotoResponse> cadastrar(@PathVariable("produtoId") UUID produtoId, @RequestBody @Valid FotoRequest fotoRequest) {
         FotoResponse fotoSalva = fotoService.cadastrar(produtoId, fotoRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(fotoSalva);
     }
 
-    @GetMapping("/produto/{produtoId}/fotos")
+    @GetMapping
     public ResponseEntity<List<FotoResponse>> listar(@PathVariable("produtoId") UUID produtoId) {
         List<FotoResponse> fotoResponseList = fotoService.listarFotos(produtoId);
 
         return ResponseEntity.ok(fotoResponseList);
     }
 
-    @GetMapping("/produto/{produtoId}/fotos/{fotoId}")
+    @GetMapping("/{fotoId}")
     public ResponseEntity<FotoResponse> listarPorId(@PathVariable("produtoId") UUID produtoId, @PathVariable("fotoId") UUID fotoId) {
         FotoResponse fotoResponse = fotoService.buscarPorId(produtoId, fotoId);
 
         return ResponseEntity.ok(fotoResponse);
     }
 
-    @PutMapping("/produto/{produtoId}/fotos/{fotoId}")
+    @PutMapping("/{fotoId}")
     public ResponseEntity<Void> atualizar(@PathVariable("produtoId") UUID produtoId, @PathVariable("fotoId") UUID fotoId, @RequestBody @Valid FotoRequest fotoRequest) {
         fotoService.atualizar(produtoId, fotoId, fotoRequest);
 
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/produto/{produtoId}/fotos/{fotoId}")
+    @DeleteMapping("/{fotoId}")
     public ResponseEntity<Void> deletar(@PathVariable("produtoId") UUID produtoId, @PathVariable("fotoId") UUID fotoId) {
         fotoService.deletar(produtoId, fotoId);
 

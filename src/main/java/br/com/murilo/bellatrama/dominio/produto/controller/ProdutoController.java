@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/produto")
+@RequestMapping("/produtos")
 @RequiredArgsConstructor
 public class ProdutoController {
 
@@ -33,11 +33,11 @@ public class ProdutoController {
         return ResponseEntity.status(HttpStatus.OK).body(responses);
     }
 
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ProdutoResponse> obterPorId(@PathVariable("id") UUID id) {
         ProdutoResponse response = service.buscarPorId(id);
 
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("{id}")
