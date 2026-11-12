@@ -99,6 +99,7 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ⬜ HTTPS, variáveis de ambiente, logs
 - ⬜ Backup e recuperação do banco
 - ⬜ Publicação da API e do frontend
+- ⬜ Configurar `server.forward-headers-strategy` para o `Location` sair com o domínio público atrás de proxy reverso.
 
 ---
 
