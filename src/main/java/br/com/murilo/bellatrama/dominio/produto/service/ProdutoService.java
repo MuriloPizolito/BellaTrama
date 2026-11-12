@@ -48,7 +48,7 @@ public class ProdutoService {
     }
 
     public void atualizar(UUID id, ProdutoRequest produtoRequest) {
-        ProdutoEntity produtoEntity = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+        ProdutoEntity produtoEntity = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
         produtoEntity.setNome(produtoRequest.nome());
         produtoEntity.setPreco(produtoRequest.preco());
         produtoEntity.setEstoque(produtoRequest.estoque());
@@ -60,7 +60,7 @@ public class ProdutoService {
     }
 
     public void desativarProduto(UUID id) {
-        ProdutoEntity produtoEntity = repository.findById(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
+        ProdutoEntity produtoEntity = repository.findByIdAndAtivoTrue(id).orElseThrow(() -> new ProdutoNaoEncontradoException("Produto não encontrado!"));
         produtoEntity.setAtivo(false);
 
         repository.save(produtoEntity);
