@@ -154,6 +154,83 @@ class ProdutoServiceTest {
 
     }
 
+    @Nested
+    @DisplayName("Atualizar")
+    class Atualizar {
+
+        @Test
+        @DisplayName("Atualiza o produto pelo id")
+        void deveAtualizarProduto() {
+            ProdutoEntity produto = criarProduto();
+            produto.setAtivo(true);
+
+            ProdutoRequest produtoRequest = criarRequest();
+
+            when(produtoRepository.findByIdAndAtivoTrue(produto.getId())).thenReturn(Optional.of(produto));
+
+            produtoService.atualizar(produto.getId(), produtoRequest);
+
+            verify(produtoRepository, times(1)).save(produto);
+            verifyNoMoreInteractions(produtoRepository);
+
+            assertThat(produto).extracting(ProdutoEntity::getNome, ProdutoEntity::getPreco, ProdutoEntity::getEstoque, ProdutoEntity::getDescricao, ProdutoEntity::getCor, ProdutoEntity::getMaterial)
+                    .containsExactly(produto.getNome(), produto.getPreco(), produto.getEstoque(), produto.getDescricao(), produto.getCor(), produto.getMaterial());
+            assertThat(produto.getAtivo()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Lança exceção ao tentar atualizar produto inexistente ou inativo")
+        void deveLancarExcecaoAoTentarAtualizarProdutoInexistenteOuInativo() {
+            UUID produtoInexistente = UUID.randomUUID();
+            ProdutoRequest produtoRequest = criarRequest();
+
+            when(produtoRepository.findByIdAndAtivoTrue(produtoInexistente)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> produtoService.atualizar(produtoInexistente, produtoRequest)).isInstanceOf(ProdutoNaoEncontradoException.class);
+
+            verify(produtoRepository, times(1)).findByIdAndAtivoTrue(produtoInexistente);
+            verify(produtoRepository, never()).save(any());
+            verifyNoMoreInteractions(produtoRepository);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("Desativar")
+    class Desativar {
+
+        @Test
+        @DisplayName("Desativa o produto")
+        void deveDesativarProduto() {
+            ProdutoEntity produto = criarProduto();
+            produto.setAtivo(true);
+
+            when(produtoRepository.findByIdAndAtivoTrue(produto.getId())).thenReturn(Optional.of(produto));
+
+            produtoService.desativarProduto(produto.getId());
+
+            verify(produtoRepository).save(produto);
+            verifyNoMoreInteractions(produtoRepository);
+
+            assertThat(produto.getAtivo()).isFalse();
+        }
+
+        @Test
+        @DisplayName("Lança exceção ao tentar desativar produto inexistente ou já inativo")
+        void deveLancarExcecaoAoTentarDesativarProdutoInexistenteOuInativo() {
+            UUID produtoInexistente = UUID.randomUUID();
+
+            when(produtoRepository.findByIdAndAtivoTrue(produtoInexistente)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> produtoService.desativarProduto(produtoInexistente)).isInstanceOf(ProdutoNaoEncontradoException.class);
+
+            verify(produtoRepository, times(1)).findByIdAndAtivoTrue(produtoInexistente);
+            verify(produtoRepository, never()).save(any());
+            verifyNoMoreInteractions(produtoRepository);
+        }
+
+    }
+
     private ProdutoRequest criarRequest() {
         return new ProdutoRequest(
                 "Bolsa",
@@ -180,12 +257,12 @@ class ProdutoServiceTest {
 
     private ProdutoEntity criarProduto() {
         return criarProduto(
-                "Bolsa",
+                "Bolsa antiga",
                 BigDecimal.valueOf(100),
-                10,
-                "Bolsa artesanal",
-                "Laranja",
-                "Algodão"
+                2,
+                "Bolsa de praia",
+                "Verde",
+                "Poliéster"
         );
     }
 
