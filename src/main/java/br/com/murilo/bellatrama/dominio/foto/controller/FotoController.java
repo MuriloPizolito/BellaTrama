@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,12 @@ public class FotoController {
     public ResponseEntity<FotoResponse> cadastrar(@PathVariable("produtoId") UUID produtoId, @RequestBody @Valid FotoRequest fotoRequest) {
         FotoResponse fotoSalva = fotoService.cadastrar(produtoId, fotoRequest);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(fotoSalva);
+        return ResponseEntity.created(ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/{id}")
+                        .buildAndExpand(fotoSalva.id())
+                        .toUri())
+                .body(fotoSalva);
     }
 
     @GetMapping

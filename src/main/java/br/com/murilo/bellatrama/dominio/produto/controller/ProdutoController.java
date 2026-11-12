@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,7 +25,12 @@ public class ProdutoController {
     public ResponseEntity<ProdutoResponse> cadastrar(@RequestBody @Valid ProdutoRequest produtoRequest) {
         ProdutoResponse produtoSalvo = service.cadastrar(produtoRequest);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(produtoSalvo);
+        return ResponseEntity.created(ServletUriComponentsBuilder
+                        .fromCurrentRequest()
+                        .path("/{id}")
+                        .buildAndExpand(produtoSalvo.id())
+                        .toUri())
+                .body(produtoSalvo);
     }
 
     @GetMapping
