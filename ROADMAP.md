@@ -23,8 +23,8 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ Validações com mensagens em português (Jakarta Validation)
 - ✅ Consultas públicas filtram apenas produtos ativos
 - ✅ Limites de coluna alinhados com a validação (`nome`, `descricao`, `cor`, `material`)
-- ✅ Produto inativo é tratado como inexistente em buscarPorId, atualizar e desativarProduto (404)
-- ✅ Mapeamento Entity → Response extraído para método privado (ProdutoService e FotoService)
+- ✅ Produto inativo é tratado como inexistente em `buscarPorId`, `atualizar` e `desativarProduto` (404)
+- ✅ Mapeamento Entity → Response extraído para método privado (`ProdutoService` e `FotoService`)
 ## Etapa 2 — Fotos dos produtos ✅
 
 - ✅ Cadastro, listagem, busca, atualização e exclusão
@@ -41,10 +41,10 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ Handler genérico (500) com log e mensagem sem vazar detalhes internos
 - ✅ Correção do bug de chave duplicada com várias violações no mesmo campo
 - ✅ Exceções 5xx do Spring são registradas em log pelo handler genérico
-- ✅ Mensagens de um mesmo campo são juntas e ordenadas (/), de forma determinística
+- ✅ Mensagens de um mesmo campo são juntas e ordenadas `/`, de forma determinística
 
 **Testes automatizados**
-- ✅ `FotoServiceTest` (JUnit 5 + Mockito + AssertJ, organizado com `@Nested`): 18 testes (cadastrar, atualizar, deletar, buscarPorId, listarFotos)
+- ✅ `FotoServiceTest` (JUnit 5 + Mockito + AssertJ, organizado com `@Nested`): 18 testes (`cadastrar`, `atualizar`, `deletar`, `buscarPorId`, `listarFotos`)
 - ✅ `GlobalExceptionHandlerTest` (`@WebMvcTest` com controller de teste): casos parametrizados, mais os de 500, 503, JSON malformado e validação
 - ✅ `ProdutoServiceTest` (regras: `ativo = true` no cadastro, inativo não é encontrado, desativação): 10 testes (cinco métodos, dois testes cada)
 - 🔄 `ProdutoControllerTest` e `FotoControllerTest` (status HTTP, rotas, chamada ao service)
@@ -59,14 +59,14 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ⬜ Docker Compose com PostgreSQL (e depois a API)
 - ⬜ GitHub Actions rodando `mvn verify`
 - ⬜ README: como rodar, decisões, estrutura do projeto
-- ⬜ Migração inicial do Flyway incluindo o que hoje foi feito à mão: tamanhos de coluna (nome 100, descricao 500, cor 50, material 100, url 2048) e data_cadastro NOT NULL
+- ⬜ Migração inicial do Flyway incluindo o que hoje foi feito à mão: tamanhos de coluna (`nome 100`, ` descricao 500`, `cor 50`, `material 100`, `url 2048`) e `data_cadastro NOT NULL`
 
 ## Etapa 5 — Ajustes de API antes de ter consumidor ⬜
 
 - ⬜ Rotas no plural (`/produtos`, `/produtos/{id}/fotos`)
 - ⬜ Desativação mais explícita (ex.: `PATCH /produtos/{id}/desativar`)
 - ⬜ Rotas públicas vs. administrativas definidas (público só vê produtos ativos; admin vê e reativa inativos)
-- ⬜ Fotos podem ser gerenciadas independentemente do estado do produto (decidido). Na etapa de segurança, as rotas públicas de fotos passam a filtrar produtos ativos, e as administrativas continuam com findById
+- ⬜ Filtrar produtos ativos nas rotas públicas de fotos quando a segurança existir
 - ⬜ Paginação apenas se o catálogo crescer
 
 ## Etapa 6 — Segurança mínima ⬜
