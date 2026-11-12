@@ -23,7 +23,8 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ Validações com mensagens em português (Jakarta Validation)
 - ✅ Consultas públicas filtram apenas produtos ativos
 - ✅ Limites de coluna alinhados com a validação (`nome`, `descricao`, `cor`, `material`)
-
+- ✅ Produto inativo é tratado como inexistente em buscarPorId, atualizar e desativarProduto (404)
+- ✅ Mapeamento Entity → Response extraído para método privado (ProdutoService e FotoService)
 ## Etapa 2 — Fotos dos produtos ✅
 
 - ✅ Cadastro, listagem, busca, atualização e exclusão
@@ -39,12 +40,14 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ Tipos de parâmetro inválidos, JSON malformado, método não permitido (405), mídia não suportada (415), rota inexistente (404)
 - ✅ Handler genérico (500) com log e mensagem sem vazar detalhes internos
 - ✅ Correção do bug de chave duplicada com várias violações no mesmo campo
+- ✅ Exceções 5xx do Spring são registradas em log pelo handler genérico
+- ✅ Mensagens de um mesmo campo são juntas e ordenadas (/), de forma determinística
 
 **Testes automatizados**
-- ✅ `FotoServiceTest` (JUnit 5 + Mockito + AssertJ, organizado com `@Nested`): 18 testes
-- ✅ `GlobalExceptionHandlerTest` (`@WebMvcTest` com controller de teste)
-- ⬜ `ProdutoServiceTest` (regras: `ativo = true` no cadastro, inativo não é encontrado, desativação)
-- ⬜ `ProdutoControllerTest` e `FotoControllerTest` (status HTTP, rotas, chamada ao service)
+- ✅ `FotoServiceTest` (JUnit 5 + Mockito + AssertJ, organizado com `@Nested`): 18 testes (cadastrar, atualizar, deletar, buscarPorId, listarFotos)
+- ✅ `GlobalExceptionHandlerTest` (`@WebMvcTest` com controller de teste): casos parametrizados, mais os de 500, 503, JSON malformado e validação
+- ✅ `ProdutoServiceTest` (regras: `ativo = true` no cadastro, inativo não é encontrado, desativação): 10 testes (cinco métodos, dois testes cada)
+- 🔄 `ProdutoControllerTest` e `FotoControllerTest` (status HTTP, rotas, chamada ao service)
 - ⬜ Testes de integração com PostgreSQL real (Testcontainers): ordenação da substituta, busca de foto que não cruza produtos, limites de coluna
 - ⬜ Exportar a coleção do Postman para o repositório
 
@@ -56,13 +59,14 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ⬜ Docker Compose com PostgreSQL (e depois a API)
 - ⬜ GitHub Actions rodando `mvn verify`
 - ⬜ README: como rodar, decisões, estrutura do projeto
+- ⬜ Migração inicial do Flyway incluindo o que hoje foi feito à mão: tamanhos de coluna (nome 100, descricao 500, cor 50, material 100, url 2048) e data_cadastro NOT NULL
 
 ## Etapa 5 — Ajustes de API antes de ter consumidor ⬜
 
 - ⬜ Rotas no plural (`/produtos`, `/produtos/{id}/fotos`)
 - ⬜ Desativação mais explícita (ex.: `PATCH /produtos/{id}/desativar`)
 - ⬜ Rotas públicas vs. administrativas definidas (público só vê produtos ativos; admin vê e reativa inativos)
-- ⬜ Fotos de produto inativo: decidir comportamento nas rotas públicas
+- ⬜ Fotos podem ser gerenciadas independentemente do estado do produto (decidido). Na etapa de segurança, as rotas públicas de fotos passam a filtrar produtos ativos, e as administrativas continuam com findById
 - ⬜ Paginação apenas se o catálogo crescer
 
 ## Etapa 6 — Segurança mínima ⬜
@@ -132,6 +136,10 @@ Entra depois do deploy, quando houver necessidade real. Pelo escopo atual (venda
 | DTOs | Mapeamento manual (sem MapStruct) |
 | Testes de service | Unitários com Mockito; o que o mock não prova vai para integração |
 | Pedidos | Adiados; sem entidade `Cliente` |
+| Produto inativo | Tratado como inexistente em busca, atualização e desativação |
+| Fotos e produto inativo | Fotos podem ser gerenciadas mesmo com o produto inativo; rotas públicas filtram só na etapa de segurança |
+| Mapeamento Entity → Response | Método privado em cada service (só o service o usa) |
+| Erros de validação | Várias mensagens do mesmo campo juntas e em ordem alfabética |
 
 ## O que testes com mock **não** provam (por isso há testes de integração)
 
@@ -139,3 +147,4 @@ Entra depois do deploy, quando houver necessidade real. Pelo escopo atual (venda
 - Que `findByIdAndProdutoId` não devolve foto de outro produto
 - Que as colunas aceitam o tamanho que a validação permite
 - Que o `@Transactional` persiste as mudanças (dirty checking)
+- Que a consulta `findByIdAndAtivoTrue` / `findByAtivoTrue` realmente exclui produtos inativos
