@@ -63,7 +63,7 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 
 ## Etapa 5 — Ajustes de API antes de ter consumidor ⬜
 
-- ⬜ Rotas no plural (`/produtos`, `/produtos/{id}/fotos`)
+- ✅ Rotas no plural (`/produtos`, `/produtos/{id}/fotos`)
 - ⬜ Desativação mais explícita (ex.: `PATCH /produtos/{id}/desativar`)
 - ⬜ Rotas públicas vs. administrativas definidas (público só vê produtos ativos; admin vê e reativa inativos)
 - ⬜ Filtrar produtos ativos nas rotas públicas de fotos quando a segurança existir

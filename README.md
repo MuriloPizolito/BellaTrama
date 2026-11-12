@@ -92,23 +92,23 @@ Cada módulo concentra suas próprias entidades, DTOs, repositórios, serviços,
 
 ### Produtos
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| POST | `/produto` | Cadastrar produto |
-| GET | `/produto` | Listar produtos ativos |
-| GET | `/produto/{produtoId}` | Buscar produto por ID |
-| PUT | `/produto/{produtoId}` | Atualizar produto |
-| PATCH | `/produto/{produtoId}` | Desativar produto |
+| Método | Endpoint                | Descrição |
+|---|-------------------------|---|
+| POST | `/produtos`             | Cadastrar produto |
+| GET | `/produtos`             | Listar produtos ativos |
+| GET | `/produtos/{produtoId}` | Buscar produto por ID |
+| PUT | `/produtos/{produtoId}` | Atualizar produto |
+| PATCH | `/produtos/{produtoId}` | Desativar produto |
 
 ### Fotografias
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| POST | `/produto/{produtoId}/fotos` | Cadastrar fotografia |
-| GET | `/produto/{produtoId}/fotos` | Listar fotografias do produto |
-| GET | `/produto/{produtoId}/fotos/{fotoId}` | Buscar fotografia por ID |
-| PUT | `/produto/{produtoId}/fotos/{fotoId}` | Atualizar fotografia |
-| DELETE | `/produto/{produtoId}/fotos/{fotoId}` | Excluir fotografia |
+| Método | Endpoint                               | Descrição |
+|---|----------------------------------------|---|
+| POST | `/produtos/{produtoId}/fotos`          | Cadastrar fotografia |
+| GET | `/produtos/{produtoId}/fotos`          | Listar fotografias do produto |
+| GET | `/produtos/{produtoId}/fotos/{fotoId}` | Buscar fotografia por ID |
+| PUT | `/produtos/{produtoId}/fotos/{fotoId}` | Atualizar fotografia |
+| DELETE | `/produtos/{produtoId}/fotos/{fotoId}` | Excluir fotografia |
 
 ## Como executar o projeto
 
