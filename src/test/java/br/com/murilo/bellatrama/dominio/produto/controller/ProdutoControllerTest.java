@@ -20,8 +20,7 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
@@ -185,6 +184,84 @@ class ProdutoControllerTest {
 
     }
 
+    @Nested
+    @DisplayName("Atualizar")
+    class Atualizar {
+
+        @Test
+        @DisplayName("Deve atualizar produto pelo id")
+        void deveAtualizarProdutoPeloId() throws Exception {
+            ProdutoRequest produtoRequest = criarRequest();
+            String json = """
+                    {
+                        "nome": "Bolsa",
+                        "preco": 299.90,
+                        "estoque": 10,
+                        "descricao": "Bolsa artesanal",
+                        "cor": "Laranja",
+                        "material": "Algodão"
+                    }
+                    """;
+            UUID produtoId = UUID.randomUUID();
+
+            mockMvc.perform(put("/produtos/{id}", produtoId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isNoContent())
+                    .andExpect(content().string(""));
+
+            verify(produtoService).atualizar(produtoId, produtoRequest);
+            verifyNoMoreInteractions(produtoService);
+        }
+
+        @Test
+        @DisplayName("Deve retornar 400 ao atualizar produto com dados inválidos")
+        void deveRetornarBadRequestAoAtualizarProdutoComDadosInvalidos() throws Exception {
+            UUID produtoId = UUID.randomUUID();
+            String json = """
+                    {
+                        "nome": "",
+                        "preco": -299.90,
+                        "estoque": 10,
+                        "descricao": "Bolsa artesanal",
+                        "cor": "Laranja",
+                        "material": "Algodão"
+                    }
+                    """;
+
+            mockMvc.perform(put("/produtos/{id}", produtoId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.mensagem").value("Existem campos inválidos na requisição."))
+                    .andExpect(jsonPath("$.erros.preco").value("O preço deve ser maior que zero."))
+                    .andExpect(jsonPath("$.erros.nome").value("O nome não pode ser nulo ou em branco."));
+
+            verifyNoInteractions(produtoService);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("Desativar produto")
+    class DesativarProduto {
+
+        @Test
+        @DisplayName("Deve desativar produto pelo id")
+        void deveDesativarProduto() throws Exception {
+            UUID produtoId = UUID.randomUUID();
+
+            mockMvc.perform(patch("/produtos/{id}", produtoId))
+                    .andExpect(status().isNoContent())
+                    .andExpect(content().string(""));
+
+            verify(produtoService).desativarProduto(produtoId);
+            verifyNoMoreInteractions(produtoService);
+        }
+
+    }
+
     private ProdutoResponse criarResponse(String nome, BigDecimal preco, Integer estoque, String descricao, String cor, String material) {
         return new ProdutoResponse(
                 UUID.randomUUID(),
@@ -219,6 +296,5 @@ class ProdutoControllerTest {
                 "Algodão"
         );
     }
-
 
 }
