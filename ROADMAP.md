@@ -47,7 +47,8 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ `FotoServiceTest` (JUnit 5 + Mockito + AssertJ, organizado com `@Nested`): 18 testes (`cadastrar`, `atualizar`, `deletar`, `buscarPorId`, `listarFotos`)
 - ✅ `GlobalExceptionHandlerTest` (`@WebMvcTest` com controller de teste): casos parametrizados, mais os de 500, 503, JSON malformado e validação
 - ✅ `ProdutoServiceTest` (regras: `ativo = true` no cadastro, inativo não é encontrado, desativação): 10 testes (cinco métodos, dois testes cada)
-- 🔄 `ProdutoControllerTest` e `FotoControllerTest` (status HTTP, rotas, chamada ao service)
+- ✅ `ProdutoControllerTest` (status HTTP, rotas, `Location`, validação, 404 pelo handler real)
+- 🔄 `FotoControllerTest` (status HTTP, rotas aninhadas, `Location`, validação)
 - ⬜ Testes de integração com PostgreSQL real (Testcontainers): ordenação da substituta, busca de foto que não cruza produtos, limites de coluna
 - ⬜ Exportar a coleção do Postman para o repositório
 
