@@ -48,8 +48,8 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ `GlobalExceptionHandlerTest` (`@WebMvcTest` com controller de teste): casos parametrizados, mais os de 500, 503, JSON malformado e validação
 - ✅ `ProdutoServiceTest` (regras: `ativo = true` no cadastro, inativo não é encontrado, desativação): 10 testes (cinco métodos, dois testes cada)
 - ✅ `ProdutoControllerTest` (status HTTP, rotas, `Location`, validação, 404 pelo handler real)
-- 🔄 `FotoControllerTest` (status HTTP, rotas aninhadas, `Location`, validação)
-- ⬜ Testes de integração com PostgreSQL real (Testcontainers): ordenação da substituta, busca de foto que não cruza produtos, limites de coluna
+- ✅ `FotoControllerTest` (status HTTP, rotas aninhadas, `Location`, validação)
+- 🔄 Testes de integração com PostgreSQL real (Testcontainers): ordenação da substituta, busca de foto que não cruza produtos, limites de coluna
 - ⬜ Exportar a coleção do Postman para o repositório
 
 ## Etapa 4 — Base de infraestrutura ⬜
