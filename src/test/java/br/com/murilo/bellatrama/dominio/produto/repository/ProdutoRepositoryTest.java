@@ -15,9 +15,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @Testcontainers
@@ -41,7 +42,7 @@ class ProdutoRepositoryTest {
     void devePersistirDescricaoComTamanhoMaximo() {
         String descricao = "x".repeat(500);
 
-        ProdutoEntity produto = criarProduto();
+        ProdutoEntity produto = criarProduto(true);
         produto.setDescricao(descricao);
 
         produto = produtoRepository.save(produto);
@@ -58,22 +59,67 @@ class ProdutoRepositoryTest {
     void deveFalharAoPersistirDescricaoMaiorQue500Caracteres() {
         String descricao = "x".repeat(501);
 
-        ProdutoEntity produto = criarProduto();
+        ProdutoEntity produto = criarProduto(true);
         produto.setDescricao(descricao);
 
         assertThatThrownBy(() -> produtoRepository.saveAndFlush(produto)).isInstanceOf(DataIntegrityViolationException.class)
                 .hasMessageContaining("character varying(500)");
     }
 
-    private ProdutoEntity criarProduto() {
+    @Test
+    void deveIgnorarProdutosInativos() {
+        ProdutoEntity produtoAtivo = criarProduto(true);
+        produtoRepository.save(produtoAtivo);
+
+        ProdutoEntity produtoInativo = criarProduto(false);
+        produtoRepository.save(produtoInativo);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        List<ProdutoEntity> produtoRetornado = produtoRepository.findByAtivoTrue();
+
+        assertThat(produtoRetornado).extracting(ProdutoEntity::getId)
+                .containsExactly(produtoAtivo.getId())
+                .hasSize(1);
+    }
+
+    @Test
+    void deveRetornarProdutoAtivoBuscandoPeloId() {
+        ProdutoEntity produtoAtivo = criarProduto(true);
+        produtoRepository.save(produtoAtivo);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        ProdutoEntity produtoRetornado = produtoRepository.findByIdAndAtivoTrue(produtoAtivo.getId()).orElseThrow();
+
+        assertThat(produtoRetornado.getId()).isEqualTo(produtoAtivo.getId());
+        assertThat(produtoRetornado.getAtivo()).isTrue();
+    }
+
+    @Test
+    void deveRetornarOptionalVazioAoBuscarProdutoInativo() {
+        ProdutoEntity produtoInativo = criarProduto(false);
+        produtoRepository.save(produtoInativo);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        Optional<ProdutoEntity> produtoRetornado = produtoRepository.findByIdAndAtivoTrue(produtoInativo.getId());
+
+        assertThat(produtoRetornado).isEmpty();
+    }
+
+    private ProdutoEntity criarProduto(boolean ativo) {
         ProdutoEntity produto = new ProdutoEntity();
         produto.setNome("Bolsa 1");
-        produto.setPreco(BigDecimal.valueOf(100));
+        produto.setPreco(new BigDecimal("100.00"));
         produto.setEstoque(2);
         produto.setDescricao("Bolsa");
         produto.setCor("Laranja");
         produto.setMaterial("Barbante");
-        produto.setAtivo(true);
+        produto.setAtivo(ativo);
 
         return produto;
     }
