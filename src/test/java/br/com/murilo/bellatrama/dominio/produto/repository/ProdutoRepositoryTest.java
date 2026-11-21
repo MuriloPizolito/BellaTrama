@@ -1,48 +1,30 @@
 package br.com.murilo.bellatrama.dominio.produto.repository;
 
-import br.com.murilo.bellatrama.dominio.foto.repository.FotoRepository;
+import br.com.murilo.bellatrama.config.BaseRepositoryTest;
 import br.com.murilo.bellatrama.dominio.produto.model.ProdutoEntity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import br.com.murilo.bellatrama.factory.TestDataFactory;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
-@Testcontainers
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-class ProdutoRepositoryTest {
-
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18");
-
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    @Autowired
-    private FotoRepository fotoRepository;
+class ProdutoRepositoryTest extends BaseRepositoryTest {
 
     @Autowired
     private ProdutoRepository produtoRepository;
 
     @Test
+    @DisplayName("Deve persistir produto com descrição de tamanho máximo")
     void devePersistirDescricaoComTamanhoMaximo() {
         String descricao = "x".repeat(500);
 
-        ProdutoEntity produto = criarProduto(true);
+        ProdutoEntity produto = TestDataFactory.criarProduto(true);
         produto.setDescricao(descricao);
 
         produto = produtoRepository.save(produto);
@@ -56,10 +38,11 @@ class ProdutoRepositoryTest {
     }
 
     @Test
+    @DisplayName("Deve rejeitar produto com descrição maior que 500 caracteres")
     void deveFalharAoPersistirDescricaoMaiorQue500Caracteres() {
         String descricao = "x".repeat(501);
 
-        ProdutoEntity produto = criarProduto(true);
+        ProdutoEntity produto = TestDataFactory.criarProduto(true);
         produto.setDescricao(descricao);
 
         assertThatThrownBy(() -> produtoRepository.saveAndFlush(produto)).isInstanceOf(DataIntegrityViolationException.class)
@@ -67,11 +50,12 @@ class ProdutoRepositoryTest {
     }
 
     @Test
+    @DisplayName("Deve ignorar produtos inativos ao buscar produtos ativos")
     void deveIgnorarProdutosInativos() {
-        ProdutoEntity produtoAtivo = criarProduto(true);
+        ProdutoEntity produtoAtivo = TestDataFactory.criarProduto(true);
         produtoRepository.save(produtoAtivo);
 
-        ProdutoEntity produtoInativo = criarProduto(false);
+        ProdutoEntity produtoInativo = TestDataFactory.criarProduto(false);
         produtoRepository.save(produtoInativo);
 
         entityManager.flush();
@@ -80,13 +64,13 @@ class ProdutoRepositoryTest {
         List<ProdutoEntity> produtoRetornado = produtoRepository.findByAtivoTrue();
 
         assertThat(produtoRetornado).extracting(ProdutoEntity::getId)
-                .containsExactly(produtoAtivo.getId())
-                .hasSize(1);
+                .containsExactly(produtoAtivo.getId());
     }
 
     @Test
+    @DisplayName("Deve retornar produto ativo ao buscar pelo id")
     void deveRetornarProdutoAtivoBuscandoPeloId() {
-        ProdutoEntity produtoAtivo = criarProduto(true);
+        ProdutoEntity produtoAtivo = TestDataFactory.criarProduto(true);
         produtoRepository.save(produtoAtivo);
 
         entityManager.flush();
@@ -99,8 +83,9 @@ class ProdutoRepositoryTest {
     }
 
     @Test
+    @DisplayName("Deve retornar Optional vazio ao buscar produto inativo pelo id")
     void deveRetornarOptionalVazioAoBuscarProdutoInativo() {
-        ProdutoEntity produtoInativo = criarProduto(false);
+        ProdutoEntity produtoInativo = TestDataFactory.criarProduto(false);
         produtoRepository.save(produtoInativo);
 
         entityManager.flush();
@@ -109,19 +94,6 @@ class ProdutoRepositoryTest {
         Optional<ProdutoEntity> produtoRetornado = produtoRepository.findByIdAndAtivoTrue(produtoInativo.getId());
 
         assertThat(produtoRetornado).isEmpty();
-    }
-
-    private ProdutoEntity criarProduto(boolean ativo) {
-        ProdutoEntity produto = new ProdutoEntity();
-        produto.setNome("Bolsa 1");
-        produto.setPreco(new BigDecimal("100.00"));
-        produto.setEstoque(2);
-        produto.setDescricao("Bolsa");
-        produto.setCor("Laranja");
-        produto.setMaterial("Barbante");
-        produto.setAtivo(ativo);
-
-        return produto;
     }
 
 }
