@@ -49,8 +49,11 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ `ProdutoServiceTest` (regras: `ativo = true` no cadastro, inativo não é encontrado, desativação): 10 testes (cinco métodos, dois testes cada)
 - ✅ `ProdutoControllerTest` (status HTTP, rotas, `Location`, validação, 404 pelo handler real)
 - ✅ `FotoControllerTest` (status HTTP, rotas aninhadas, `Location`, validação)
-- 🔄 Testes de integração com PostgreSQL real (Testcontainers): ordenação da substituta, busca de foto que não cruza produtos, limites de coluna
+- ✅ `FotoRepositoryTest` (Testcontainers + PostgreSQL 18): 7 testes. Ordenação da substituta (mais antiga, desempate por `id`, sem a foto excluída, sem fotos de outro produto), busca de foto que não cruza produtos e limite de 2048 caracteres da URL
+- ✅ `ProdutoRepositoryTest` (Testcontainers + PostgreSQL 18): 5 testes. Limite de 500 caracteres da descrição e consultas que excluem produtos inativos
 - ⬜ Exportar a coleção do Postman para o repositório
+- > O esquema do banco de teste é gerado a partir das entidades (`create-drop`). Quando o Flyway for adotado, esses mesmos testes passam a validar o esquema real das migrações.
+- > Os testes de integração compartilham um único contêiner PostgreSQL por execução (`BaseRepositoryTest`).
 
 ## Etapa 4 — Base de infraestrutura ⬜
 
@@ -143,10 +146,15 @@ Entra depois do deploy, quando houver necessidade real. Pelo escopo atual (venda
 | Mapeamento Entity → Response | Método privado em cada service (só o service o usa) |
 | Erros de validação | Várias mensagens do mesmo campo juntas e em ordem alfabética |
 
-## O que testes com mock **não** provam (por isso há testes de integração)
+## O que testes com mock **não** provam
 
-- Que a consulta `findFirstBy...OrderBy...` realmente ordena certo
-- Que `findByIdAndProdutoId` não devolve foto de outro produto
-- Que as colunas aceitam o tamanho que a validação permite
-- Que o `@Transactional` persiste as mudanças (dirty checking)
-- Que a consulta `findByIdAndAtivoTrue` / `findByAtivoTrue` realmente exclui produtos inativos
+**Já cobertos por testes de integração**
+- ✅ Que a consulta `findFirstBy...OrderBy...` realmente ordena certo
+- ✅ Que `findByIdAndProdutoId` não devolve foto de outro produto
+- ✅ Que as colunas aceitam o tamanho que a validação permite
+- ✅ Que `findByIdAndAtivoTrue` / `findByAtivoTrue` excluem produtos inativos
+
+**Ainda não cobertos**
+- ⬜ Que o `@Transactional` persiste as mudanças sem `save` explícito (dirty checking), como na promoção da substituta em `deletar`
+- ⬜ Que o banco impede duas fotos principais no mesmo produto (índice único parcial, Etapa 4)
+- ⬜ Que o esquema das migrações do Flyway é o que as entidades esperam (Etapa 4)
