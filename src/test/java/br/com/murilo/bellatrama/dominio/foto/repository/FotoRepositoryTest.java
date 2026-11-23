@@ -196,7 +196,7 @@ class FotoRepositoryTest extends BaseRepositoryTest {
     }
 
     @Test
-    @DisplayName("Deve retornar Optional vazio quando existe apenas a foto excluída")
+    @DisplayName("Deve retornar Optional vazio quando o produto não corresponde ao produto da foto")
     void deveRetornarOptionalVazioQuandoProdutoNaoCorrespondeAoIdDaFoto() {
         ProdutoEntity produtoSemFoto = TestDataFactory.criarProduto(true);
         produtoRepository.save(produtoSemFoto);
