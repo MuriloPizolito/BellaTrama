@@ -183,19 +183,30 @@ implementação da API até a publicação da aplicação.
 Confira o planejamento e o progresso das funcionalidades em
 [ROADMAP.md](./ROADMAP.md).
 
-## Collection do Postman
+## Coleção do Postman
 
-A coleção de requisições da API BellaTrama está disponível em:
+A coleção de requisições da API BellaTrama está disponível no arquivo:
 
 [ProjetoBellaTrama.postman_collection.json](docs/postman/ProjetoBellaTrama.postman_collection.json)
 
-A coleção contempla os endpoints de Produtos e Fotos, incluindo cenários de sucesso e erros HTTP 400 e 404.
+A coleção contempla os endpoints de **Produtos e Fotos**, incluindo cenários de sucesso e de erros HTTP 400 e 404.
 
 ### Como utilizar
-- Importe o arquivo JSON no Postman.
-- URL base configurada como: `http://localhost:8080`.
-- Configure `produtoId` e `fotoId` com identificadores existentes no banco local.
-- Execute as requisições disponíveis nas pastas Produtos e Fotos.
+
+1. Importe o arquivo JSON no Postman.
+2. A URL base já está configurada como `http://localhost:8080`.
+3. Execute a requisição **Cadastrar produto**, na pasta Produtos. O identificador do produto será armazenado automaticamente na variável `produtoId`.
+4. Execute a requisição **Cadastrar foto**, na pasta Fotos. O identificador da foto também será armazenado automaticamente na variável `fotoId`.
+5. Execute as demais requisições disponíveis nas pastas Produtos e Fotos.
+
+### Preenchimento automático de variáveis
+
+A coleção utiliza scripts na aba **Tests** das requisições de cadastro para capturar os identificadores retornados pela API e armazená-los nas variáveis de coleção:
+
+- `produtoId`: preenchida automaticamente após o cadastro de um produto.
+- `fotoId`: preenchida automaticamente após o cadastro de uma foto.
+
+As variáveis `produtoIdInexistente` e `fotoIdInexistente` possuem identificadores previamente configurados para testar os cenários de erro HTTP 404.
 
 ---
 
