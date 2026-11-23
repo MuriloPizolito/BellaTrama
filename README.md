@@ -120,13 +120,27 @@ Cada módulo concentra suas próprias entidades, DTOs, repositórios, serviços,
 
 ### Configuração do banco de dados
 
-Crie um banco de dados PostgreSQL chamado:
+Crie um banco de dados PostgreSQL com o nome de sua preferência.
 
-```sql
-CREATE DATABASE db_bellatrama;
-```
+A conexão com o banco de dados é configurada por meio de variáveis de ambiente, evitando armazenar credenciais diretamente nos arquivos versionados.
 
-Configure as credenciais e a conexão com o banco no arquivo `application.yml`, de acordo com seu ambiente.
+Configure as variáveis de ambiente abaixo de acordo com as credenciais e o banco criado:
+
+| Variável | Descrição |
+|---|---|
+| `DB_URL` | URL de conexão JDBC com o PostgreSQL |
+| `DB_USERNAME` | Usuário do banco de dados |
+| `DB_PASSWORD` | Senha do banco de dados |
+| `SPRING_PROFILES_ACTIVE` | Perfil de execução (`dev` ou `prod`) |
+
+### Perfis da aplicação
+
+A aplicação possui dois perfis:
+
+- **dev:** utilizado durante o desenvolvimento, com atualização automática do esquema pelo Hibernate (`ddl-auto: update`) e exibição de SQL.
+- **prod:** destinado à produção, com validação do esquema pelo Hibernate (`ddl-auto: validate`) e sem exibição de SQL.
+
+O perfil padrão é `dev`. Para selecionar outro perfil, configure a variável `SPRING_PROFILES_ACTIVE`.
 
 ### Executando a aplicação
 
