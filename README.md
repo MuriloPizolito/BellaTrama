@@ -183,6 +183,20 @@ implementação da API até a publicação da aplicação.
 Confira o planejamento e o progresso das funcionalidades em
 [ROADMAP.md](./ROADMAP.md).
 
+## Collection do Postman
+
+A coleção de requisições da API BellaTrama está disponível em:
+
+[ProjetoBellaTrama.postman_collection.json](docs/postman/ProjetoBellaTrama.postman_collection.json)
+
+A coleção contempla os endpoints de Produtos e Fotos, incluindo cenários de sucesso e erros HTTP 400 e 404.
+
+### Como utilizar
+- Importe o arquivo JSON no Postman.
+- URL base configurada como: `http://localhost:8080`.
+- Configure `produtoId` e `fotoId` com identificadores existentes no banco local.
+- Execute as requisições disponíveis nas pastas Produtos e Fotos.
+
 ---
 
 **Status:** Em desenvolvimento.
