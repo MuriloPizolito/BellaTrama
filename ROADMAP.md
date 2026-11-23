@@ -33,7 +33,7 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ Ao excluir a principal, a **foto mais antiga** entre as restantes assume (`dataCadastro` + desempate por `id`)
 - ✅ Foto sempre buscada junto do produto (`findByIdAndProdutoId`), impedindo acesso cruzado
 
-## Etapa 3 — Tratamento de erros e testes 🔄
+## Etapa 3 — Tratamento de erros e testes ✅
 
 **Tratamento de erros**
 - ✅ `GlobalExceptionHandler` com `ErrorResponse` padronizado
@@ -51,13 +51,13 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 - ✅ `FotoControllerTest` (status HTTP, rotas aninhadas, `Location`, validação)
 - ✅ `FotoRepositoryTest` (Testcontainers + PostgreSQL 18): 7 testes. Ordenação da substituta (mais antiga, desempate por `id`, sem a foto excluída, sem fotos de outro produto), busca de foto que não cruza produtos e limite de 2048 caracteres da URL
 - ✅ `ProdutoRepositoryTest` (Testcontainers + PostgreSQL 18): 5 testes. Limite de 500 caracteres da descrição e consultas que excluem produtos inativos
-- ⬜ Exportar a coleção do Postman para o repositório
+- ✅ Exportar a coleção do Postman para o repositório
 - > O esquema do banco de teste é gerado a partir das entidades (`create-drop`). Quando o Flyway for adotado, esses mesmos testes passam a validar o esquema real das migrações.
 - > Os testes de integração compartilham um único contêiner PostgreSQL por execução (`BaseRepositoryTest`).
 
-## Etapa 4 — Base de infraestrutura ⬜
+## Etapa 4 — Base de infraestrutura 🔄
 
-- ⬜ Perfis `dev` / `prod` e credenciais por variáveis de ambiente (nada de senha no repositório)
+- 🔄 Perfis `dev` / `prod` e credenciais por variáveis de ambiente (nada de senha no repositório)
 - ⬜ Flyway: migrações versionadas no lugar de `ddl-auto: update`
 - ⬜ Índice único parcial no PostgreSQL: *uma foto principal por produto* (atenção à ordem do flush no Hibernate: `saveAndFlush`/`flush` ao trocar a principal)
 - ⬜ Docker Compose com PostgreSQL (e depois a API)
