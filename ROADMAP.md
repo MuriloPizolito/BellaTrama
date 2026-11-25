@@ -57,13 +57,21 @@ Projeto de estudo (Java 25, Spring Boot 4) e de portfólio. As vendas acontecem 
 
 ## Etapa 4 — Base de infraestrutura 🔄
 
-- 🔄 Perfis `dev` / `prod` e credenciais por variáveis de ambiente (nada de senha no repositório)
+- ✅ Perfis `dev` / `prod` e credenciais por variáveis de ambiente (nada de senha no repositório)
+    - O perfil `dev` é utilizado por padrão. Em produção, é necessário definir explicitamente `SPRING_PROFILES_ACTIVE=prod`.
+    - O perfil `prod` utiliza `ddl-auto: validate` e depende de um esquema previamente criado no banco de dados. Com a adoção do Flyway, as migrações serão responsáveis por criar e versionar esse esquema.
 - ⬜ Flyway: migrações versionadas no lugar de `ddl-auto: update`
-- ⬜ Índice único parcial no PostgreSQL: *uma foto principal por produto* (atenção à ordem do flush no Hibernate: `saveAndFlush`/`flush` ao trocar a principal)
-- ⬜ Docker Compose com PostgreSQL (e depois a API)
-- ⬜ GitHub Actions rodando `mvn verify`
-- ⬜ README: como rodar, decisões, estrutura do projeto
-- ⬜ Migração inicial do Flyway incluindo o que hoje foi feito à mão: tamanhos de coluna (`nome 100`, ` descricao 500`, `cor 50`, `material 100`, `url 2048`) e `data_cadastro NOT NULL`
+    - Migração V1 com o esquema atual, incluindo:
+        - Tamanhos de coluna (`nome 100`, `descricao 500`, `cor 50`, `material 100`, `url 2048`).
+        - `data_cadastro NOT NULL`.
+    - Utilizar `ddl-auto: validate` em todos os perfis.
+    - Garantir que os testes de integração sejam executados sobre um banco inicializado pelas migrações do Flyway.
+    - Migração V2 com o índice único parcial no PostgreSQL: *uma foto principal por produto*.
+- ⬜ Índice único parcial no PostgreSQL: *uma foto principal por produto* (atenção à ordem do flush no Hibernate: `saveAndFlush`/`flush` ao trocar a principal).
+- ⬜ Docker Compose com PostgreSQL (e depois a API).
+- ⬜ GitHub Actions rodando `mvn verify`.
+- ✅ README: como rodar, decisões, estrutura do projeto.
+  - Atualizar após a adoção do Flyway: revisar a descrição do perfil `dev`, removendo a referência a `ddl-auto: update` e documentando o uso das migrações e de `ddl-auto: validate` em todos os perfis.
 
 ## Etapa 5 — Ajustes de API antes de ter consumidor ⬜
 
