@@ -15,12 +15,15 @@ O projeto está em desenvolvimento e também tem como objetivo aprofundar conhec
 - **Spring Web** — desenvolvimento de APIs REST.
 - **Spring Data JPA** — persistência e acesso aos dados.
 - **Hibernate** — implementação ORM.
-- **PostgreSQL** — banco de dados relacional.
+- **PostgreSQL 18** — banco de dados relacional.
 - **Bean Validation** — validação de dados de entrada.
 - **Lombok** — redução de código repetitivo.
 - **JUnit 5** — testes automatizados.
 - **Mockito** — criação de mocks e testes unitários.
 - **Maven** — gerenciamento de dependências e build.
+- **AssertJ** — biblioteca para asserções mais expressivas nos testes automatizados.
+- **Testcontainers** — execução de testes de integração com PostgreSQL em contêineres Docker.
+- **Docker** — ambiente de contêineres utilizado pelos testes de integração.
 
 ## Funcionalidades implementadas
 
@@ -50,6 +53,7 @@ O projeto possui regras específicas para manter a consistência do catálogo:
 - Produtos podem ser desativados sem serem removidos fisicamente do banco de dados.
 - Produtos desativados não devem aparecer nas consultas públicas do catálogo.
 - Produtos com estoque zerado continuam ativos e podem permanecer visíveis.
+- Produtos desativados são tratados como inexistentes nas operações de consulta, atualização e desativação, retornando HTTP 404.
 
 **Fotografias**
 - Um produto pode possuir várias fotografias.
@@ -83,7 +87,9 @@ br.com.murilo.bellatrama
 │       ├── repository
 │       └── service
 │
-└── ...
+└── exception
+    ├── GlobalExceptionHandler.java
+    └── ErrorResponse.java
 ```
 
 Cada módulo concentra suas próprias entidades, DTOs, repositórios, serviços, controladores e exceções, favorecendo a organização e a manutenção do código.
@@ -98,7 +104,7 @@ Cada módulo concentra suas próprias entidades, DTOs, repositórios, serviços,
 | GET | `/produtos`             | Listar produtos ativos |
 | GET | `/produtos/{produtoId}` | Buscar produto por ID |
 | PUT | `/produtos/{produtoId}` | Atualizar produto |
-| PATCH | `/produtos/{produtoId}` | Desativar produto |
+| PATCH | `/produtos/{produtoId}` | Desativar produto (exclusão lógica)|
 
 ### Fotografias
 
@@ -110,13 +116,52 @@ Cada módulo concentra suas próprias entidades, DTOs, repositórios, serviços,
 | PUT | `/produtos/{produtoId}/fotos/{fotoId}` | Atualizar fotografia |
 | DELETE | `/produtos/{produtoId}/fotos/{fotoId}` | Excluir fotografia |
 
+**Observação:** os endpoints de cadastro (`POST`) retornam HTTP 201 (Created), incluindo o header `Location` com o endereço do recurso criado.
+
+
+## Tratamento de erros
+
+A aplicação utiliza um tratamento global de exceções por meio do `GlobalExceptionHandler`, implementado com `@RestControllerAdvice`.
+
+As respostas de erro seguem um formato padronizado, representado pela classe `ErrorResponse`:
+
+| Campo | Descrição |
+|---|---|
+| `status` | Código HTTP da resposta |
+| `mensagem` | Descrição do erro ocorrido |
+| `erros` | Mapa com os campos inválidos e suas respectivas mensagens de validação. Pode ser `null` quando não se aplica. |
+
+### Exemplo de erro de validação (HTTP 400)
+
+    {
+      "status": 400,
+      "mensagem": "Existem campos inválidos na requisição.",
+      "erros": {
+        "nome": "não deve estar em branco",
+        "preco": "deve ser maior que zero"
+      }
+    }
+
+### Exemplo de recurso não encontrado (HTTP 404)
+
+    {
+      "status": 404,
+      "mensagem": "Produto não encontrado.",
+      "erros": null
+    }
+
+As mensagens apresentadas são exemplos ilustrativos. O conteúdo retornado depende da exceção e das validações acionadas pela requisição.
+
+
 ## Como executar o projeto
 
 ### Pré-requisitos
 
 - Java 25 ou superior.
-- Maven.
 - PostgreSQL.
+- Docker Desktop (necessário para executar os testes com Testcontainers).
+
+O Maven Wrapper já está incluído no projeto, não sendo necessário instalar o Maven separadamente.
 
 ### Configuração do banco de dados
 
@@ -124,7 +169,17 @@ Crie um banco de dados PostgreSQL com o nome de sua preferência.
 
 A conexão com o banco de dados é configurada por meio de variáveis de ambiente, evitando armazenar credenciais diretamente nos arquivos versionados.
 
-Configure as variáveis de ambiente abaixo de acordo com as credenciais e o banco criado:
+O arquivo `.env.example`, disponível na raiz do projeto, apresenta um modelo das variáveis necessárias:
+
+**Importante:** o arquivo `.env.example` serve apenas como modelo das variáveis necessárias. O Spring Boot não carrega arquivos `.env` automaticamente. Portanto, os valores devem ser definidos diretamente como variáveis de ambiente no sistema operacional ou na configuração de execução da IDE.
+
+```properties
+DB_URL=jdbc:postgresql://localhost:5432/bellatrama
+DB_USERNAME=seu_usuario
+DB_PASSWORD=sua_senha
+SPRING_PROFILES_ACTIVE=dev
+```
+**Variáveis de ambiente:**
 
 | Variável | Descrição |
 |---|---|
@@ -142,6 +197,8 @@ A aplicação possui dois perfis:
 
 O perfil padrão é `dev`. Para selecionar outro perfil, configure a variável `SPRING_PROFILES_ACTIVE`.
 
+**Atenção:** em ambiente de produção, configure explicitamente `SPRING_PROFILES_ACTIVE=prod`. Atualmente, o perfil `prod` depende de um esquema de banco de dados previamente criado, pois as migrações com Flyway ainda não foram implementadas.
+
 ### Executando a aplicação
 
 Clone o repositório:
@@ -156,38 +213,65 @@ Acesse a pasta:
 cd BellaTrama
 ```
 
-Execute a aplicação com Maven:
+Configure as variáveis de ambiente necessárias antes de iniciar a aplicação.
+
+**Windows (PowerShell):**
+
+```powershell
+$env:DB_URL="jdbc:postgresql://localhost:5432/bellatrama"
+$env:DB_USERNAME="seu_usuario"
+$env:DB_PASSWORD="sua_senha"
+$env:SPRING_PROFILES_ACTIVE="dev"
+```
+
+**Linux e macOS:**
+
+```bash
+export DB_URL="jdbc:postgresql://localhost:5432/bellatrama"
+export DB_USERNAME="seu_usuario"
+export DB_PASSWORD="sua_senha"
+export SPRING_PROFILES_ACTIVE="dev"
+```
+
+Execute a aplicação:
+
+**Windows (PowerShell):**
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+**Linux e macOS:**
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-No Windows, utilize:
-
-```bash
-mvnw.cmd spring-boot:run
-```
-
 ## Testes
 
-O projeto utiliza JUnit 5 e Mockito para desenvolver testes unitários, validando as regras de negócio implementadas nos serviços.
+O projeto utiliza JUnit 5, Mockito e AssertJ para a implementação de testes automatizados, organizados em três camadas:
+
+- **Testes unitários:** validam as regras de negócio dos serviços, utilizando Mockito para simulação de dependências e AssertJ para asserções.
+- **Testes da camada web:** utilizam `@WebMvcTest` para verificar os endpoints, os códigos HTTP, as validações e o tratamento global de exceções.
+- **Testes de integração:** utilizam Testcontainers com PostgreSQL 18 para validar o comportamento dos repositórios e a inicialização do contexto da aplicação.
+
+Os testes de integração utilizam contêineres Docker, sendo necessário que o Docker esteja em execução.
 
 Os testes são organizados com `@Nested`, agrupando os cenários de acordo com os métodos testados.
 
-Para executar os testes:
+Para executar a suíte de testes:
+
+**Windows (PowerShell):**
+
+```powershell
+.\mvnw.cmd test
+```
+
+**Linux e macOS:**
 
 ```bash
 ./mvnw test
 ```
-
-## Próximos passos
-
-- Finalizar e ampliar a cobertura dos testes unitários.
-- Implementar testes de integração com o banco de dados.
-- Avaliar uma solução de armazenamento externo para as fotografias.
-- Implementar autenticação e autorização.
-- Desenvolver a integração com uma interface frontend.
-- Avaliar a implantação da aplicação em ambiente de produção.
 
 ## Roadmap
 
