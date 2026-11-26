@@ -17,16 +17,16 @@ public class ProdutoEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "nome", length = 100)
+    @Column(name = "nome", length = 100, nullable = false)
     private String nome;
 
-    @Column(name = "preco")
+    @Column(name = "preco", precision = 10, scale = 2, nullable = false)
     private BigDecimal preco;
 
-    @Column(name = "estoque")
+    @Column(name = "estoque", nullable = false)
     private Integer estoque;
 
-    @Column(name = "descricao", length = 500)
+    @Column(name = "descricao", length = 500, nullable = false)
     private String descricao;
 
     @Column(name = "cor", length = 50)
@@ -35,7 +35,7 @@ public class ProdutoEntity {
     @Column(name = "material", length = 100)
     private String material;
 
-    @Column(name = "ativo")
+    @Column(name = "ativo", nullable = false)
     private Boolean ativo;
 
 }
